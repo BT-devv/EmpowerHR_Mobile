@@ -6,7 +6,6 @@ class AuthLoading extends AuthState {}
 
 class AuthSuccess extends AuthState {
   final String userName;
-  
   AuthSuccess({required this.userName});
 }
 

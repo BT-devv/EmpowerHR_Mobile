@@ -18,6 +18,7 @@ dependencies:
   google_fonts: ^6.2.1
   flutter_dotenv: ^5.2.1
   shared_preferences: ^2.3.4
+  equatable: ^2.0.7
   
 
 dev_dependencies:
@@ -29,6 +30,20 @@ flutter:
   uses-material-design: true
   assets:
     - .env.dev
-    - .env.prod
     - assets/background.png
     - assets/LOGO-02.png
+    - assets/forgotPasswordImg.png
+    - assets/verifyImg.png
+    - assets/change_new_password_IMG.png
+    - assets/image.png
+    - assets/QR_code.png
+    - assets/icons/home_icon1.png
+    - assets/icons/home_icon2.png
+    - assets/icons/chat_icon1.png
+    - assets/icons/chat_icon2.png
+    - assets/icons/project_icon1.png
+    - assets/icons/project_icon2.png
+    - assets/icons/report_icon1.png
+    - assets/icons/report_icon2.png
+    - assets/icons/account_icon1.png
+    - assets/icons/account_icon2.png

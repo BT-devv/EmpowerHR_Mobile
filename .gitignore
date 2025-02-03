@@ -9,7 +9,6 @@
 .history
 .svn/
 .env.dev
-.env.prod
 migrate_working_dir/
 
 # IntelliJ related

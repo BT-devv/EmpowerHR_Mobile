@@ -12,7 +12,7 @@ Future<int?> login(String email, String password) async {
   try {
     // Gọi phương thức postReq để gửi yêu cầu đăng nhập
     final http.Response response =
-        await ApiService().postReq(credentials, 'login');
+        await ApiService().postReq(credentials, 'user/login');
     final Map<String, dynamic> data = jsonDecode(response.body);
 
     if (response.statusCode == 200) {
@@ -23,8 +23,9 @@ Future<int?> login(String email, String password) async {
       return response.statusCode;
     } else {
       print('Request failed with status: ${response.statusCode}');
-      throw Exception('${data['message']}');
+      return response.statusCode;
     }
+    
   } catch (error) {
     print('An error occurred during login: $error');
     rethrow;

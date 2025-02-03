@@ -6,7 +6,7 @@ class DialogUtils {
   static void showLoadingDialog(BuildContext context) {
     showDialog(
       context: context,
-      barrierDismissible: false, // Không cho phép tắt bằng cách nhấn ra ngoài
+      barrierDismissible: false, 
       builder: (_) {
         return const Center(
           child: CircularProgressIndicator(

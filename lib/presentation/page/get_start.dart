@@ -1,4 +1,4 @@
-import 'package:empowerhr_moblie/presentation/page/login_page.dart';
+import 'package:empowerhr_moblie/presentation/page/auth/login_page.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -13,7 +13,7 @@ class _GetStartPageState extends State<GetStartPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        backgroundColor: Color(0xFF4B5563),
+        backgroundColor: const Color(0xFF4B5563),
         body: Column(
           children: [
             Center(
