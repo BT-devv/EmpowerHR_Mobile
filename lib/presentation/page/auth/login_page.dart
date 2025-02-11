@@ -59,7 +59,6 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
               DialogUtils.showLoadingDialog(context);
             } else if (state is AuthSuccess) {
               print("Login successful! Navigating to BottomNavBar...");
-
               Navigator.push(
                 context,
                 PageRouteBuilder(
@@ -338,87 +337,4 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
     );
   }
 
-  Widget _buildTextField({
-    required String label,
-    required TextEditingController controller,
-    required FocusNode focusNode,
-    required String hintText,
-    bool isPassword = false,
-    bool isEmailField = false,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Align(
-          alignment: Alignment.centerLeft,
-          child: Container(
-            margin: const EdgeInsets.only(left: 20),
-            child: Text(label),
-          ),
-        ),
-        const SizedBox(height: 13),
-        Container(
-          height: 50,
-          decoration: BoxDecoration(
-            color: const Color(0xFFDEE3E7),
-            borderRadius: BorderRadius.circular(15),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.25),
-                offset: const Offset(0, 4),
-                blurRadius: 2,
-              ),
-            ],
-            border: Border.all(
-              color: (isEmailField && isEmailEmpty) ||
-                      (!isEmailField && isPasswordEmpty)
-                  ? Colors.red
-                  : Colors.transparent,
-              width: 2,
-            ),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          margin: const EdgeInsets.symmetric(horizontal: 20),
-          child: TextField(
-            cursorColor: const Color(0xFF2EB67D),
-            obscureText: isPassword && !isPasswordVisible,
-            controller: controller,
-            focusNode: focusNode,
-            textAlignVertical: TextAlignVertical.center,
-            decoration: InputDecoration(
-              border: InputBorder.none,
-              hintText: hintText,
-              isCollapsed: true,
-              contentPadding: const EdgeInsets.symmetric(vertical: 14),
-              hintStyle: GoogleFonts.poppins(
-                fontSize: 15,
-                color: (isEmailField && isEmailEmpty) ||
-                        (!isEmailField && isPasswordEmpty)
-                    ? Colors.red
-                    : Colors.grey,
-              ),
-              suffixIcon: isPassword
-                  ? Padding(
-                      padding: const EdgeInsets.only(right: 10),
-                      child: IconButton(
-                        icon: Icon(
-                          isPasswordVisible
-                              ? Icons.visibility
-                              : Icons.visibility_off,
-                          color: Colors.grey,
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            isPasswordVisible = !isPasswordVisible;
-                          });
-                        },
-                      ),
-                    )
-                  : null,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
 }
