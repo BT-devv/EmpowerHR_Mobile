@@ -1,6 +1,7 @@
 import 'package:empowerhr_moblie/domain/usecases/login_usercase.dart';
 import 'package:empowerhr_moblie/presentation/bloc/auth/auth_event.dart';
 import 'package:empowerhr_moblie/presentation/bloc/auth/auth_state.dart';
+import 'package:flutter/material.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -9,20 +10,19 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<LoginEvent>((event, emit) async {
       emit(AuthLoading()); // Phát trạng thái loading
       try {
-        // Gọi usecase login với email và password từ event
         final statusCode = await login(event.email, event.password);
         if (statusCode == 200) {
-          emit(AuthSuccess(userName: event.email)); // Đăng nhập thành công
+          emit(AuthSuccess(userName: event.email)); 
         } else if(statusCode == 401) {
-          emit(AuthFailure(message: "Incorrect password."));
+          emit(AuthFailure(message: "Incorrect Password.Please try again",image:Image.asset('assets/error1.png')));
         }
         else if(statusCode == 404) {
-          emit(AuthFailure(message: "Unknow user."));
+          emit(AuthFailure(message: " Account not found.Please try again",image:Image.asset('assets/error2.png')));
         }else{
-          emit(AuthFailure(message: "Exception from server."));
+          emit(AuthFailure(message: "Exception from server.",image:Image.asset('assets/error1.png')));
         }
       } catch (error) {
-        emit(AuthFailure(message: "An unexpected error occurred."));
+        
       }
     });
 

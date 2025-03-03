@@ -75,7 +75,7 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
               );
             } else if (state is AuthFailure) {
               DialogUtils.dismissDialog(context);
-              DialogUtils.showErrorDialog(context, state.message);
+              DialogUtils.showErrorDialog(context, state.message, state.image);
             }
           },
           builder: (context, state) {
@@ -136,14 +136,7 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
                                       decoration: BoxDecoration(
                                         color: const Color(0xFFDEE3E7),
                                         borderRadius: BorderRadius.circular(15),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color:
-                                                Colors.black.withOpacity(0.25),
-                                            offset: const Offset(0, 4),
-                                            blurRadius: 2,
-                                          ),
-                                        ],
+                                        
                                         border: Border.all(
                                           color: isEmailEmpty
                                               ? Colors.red
@@ -188,14 +181,7 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
                                       decoration: BoxDecoration(
                                         color: const Color(0xFFDEE3E7),
                                         borderRadius: BorderRadius.circular(15),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color:
-                                                Colors.black.withOpacity(0.25),
-                                            offset: const Offset(0, 4),
-                                            blurRadius: 2,
-                                          ),
-                                        ],
+                                        
                                         border: Border.all(
                                           color: isPasswordEmpty
                                               ? Colors.red
@@ -290,8 +276,9 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
                                         });
 
                                         if (!isEmailEmpty && !isPasswordEmpty) {
-                                          print("Login button pressed");
-
+                                          _emailFocus
+                                              .unfocus();
+                                          _passwordFocus.unfocus();
                                           context.read<AuthBloc>().add(
                                                 LoginEvent(
                                                   email: emailController.text,
@@ -336,5 +323,4 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
       ),
     );
   }
-
 }

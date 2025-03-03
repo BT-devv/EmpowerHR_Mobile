@@ -19,6 +19,7 @@ dependencies:
   flutter_dotenv: ^5.2.1
   shared_preferences: ^2.3.4
   equatable: ^2.0.7
+  intl: ^0.18.1
   
 
 dev_dependencies:
@@ -47,3 +48,14 @@ flutter:
     - assets/icons/report_icon2.png
     - assets/icons/account_icon1.png
     - assets/icons/account_icon2.png
+    - assets/error1.png
+    - assets/error2.png
+    - assets/qr-code.png
+    - assets/thongbao.png
+    - assets/calendar-days.png
+    - assets/HomepageQR.png
+    - assets/HomepageQR(1).png
+    - assets/HomepageQR(2).png
+    - assets/HomepageQR(3).png
+    - assets/checkSuccess.png
+    - assets/CombinedShape.png
