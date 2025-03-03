@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 
 Future<int?> login(String email, String password) async {
   final credentials = {
-    'email': email,
+    'emailCompany': email,
     'password': password,
   };
 
@@ -19,13 +19,14 @@ Future<int?> login(String email, String password) async {
       // Lưu token vào SharedPreferences
       SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setString('token', data['token']);
+      await prefs.setString('idUser', data['userId']);  
       print('Token saved: ${data['token']}');
       return response.statusCode;
     } else {
       print('Request failed with status: ${response.statusCode}');
+      print('Request failed with message: ${response.body}');
       return response.statusCode;
     }
-    
   } catch (error) {
     print('An error occurred during login: $error');
     rethrow;
