@@ -48,6 +48,16 @@ flutter:
     - assets/icons/report_icon2.png
     - assets/icons/account_icon1.png
     - assets/icons/account_icon2.png
+    - assets/icons/bell.png
+    - assets/icons/building-library.png
+    - assets/icons/check-badge.png
+    - assets/icons/finger-print.png
+    - assets/icons/hand-raised.png
+    - assets/icons/lock-closed.png
+    - assets/icons/moon.png
+    - assets/icons/shield-check.png
+    - assets/icons/arrow-small-right.png
+    - assets/icons/user-circle.png
     - assets/error1.png
     - assets/error2.png
     - assets/qr-code.png
@@ -59,3 +69,5 @@ flutter:
     - assets/HomepageQR(3).png
     - assets/checkSuccess.png
     - assets/CombinedShape.png
+    - assets/background_account.png
+
