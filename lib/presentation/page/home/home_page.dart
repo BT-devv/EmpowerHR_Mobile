@@ -211,19 +211,16 @@ class _HomePageState extends State<HomePage> {
                                                 future: getQRCode(),
                                                 builder: (context, snapshot) {
                                                   if (snapshot
-                                                      .connectionState ==
-                                                      ConnectionState
-                                                          .waiting) {
+                                                          .connectionState ==
+                                                      ConnectionState.waiting) {
                                                     return const CircularProgressIndicator();
                                                   } else if (snapshot
                                                           .hasError ||
                                                       !snapshot.hasData ||
                                                       !snapshot.data!.success) {
                                                     return Container(
-                                                      padding:
-                                                          EdgeInsets.all(
-                                                              screenWidth *
-                                                                  0.05),
+                                                      padding: EdgeInsets.all(
+                                                          screenWidth * 0.05),
                                                       decoration: BoxDecoration(
                                                         color: Colors.white,
                                                         borderRadius:
@@ -231,12 +228,12 @@ class _HomePageState extends State<HomePage> {
                                                                 .circular(5),
                                                         boxShadow: [
                                                           BoxShadow(
-                                                            color: Colors
-                                                                .black
+                                                            color: Colors.black
                                                                 .withOpacity(
                                                                     0.25),
-                                                            offset: const Offset(
-                                                                4, 4),
+                                                            offset:
+                                                                const Offset(
+                                                                    4, 4),
                                                             blurRadius: 4,
                                                           ),
                                                         ],
@@ -244,12 +241,11 @@ class _HomePageState extends State<HomePage> {
                                                       child: Text(
                                                         snapshot.hasError
                                                             ? 'Error: ${snapshot.error}'
-                                                            : snapshot
-                                                                    .data
+                                                            : snapshot.data
                                                                     ?.message ??
                                                                 'Failed to load QR Code',
-                                                        style: GoogleFonts
-                                                            .poppins(
+                                                        style:
+                                                            GoogleFonts.poppins(
                                                           textStyle:
                                                               const TextStyle(
                                                             fontSize: 16,
@@ -260,8 +256,8 @@ class _HomePageState extends State<HomePage> {
                                                     );
                                                   } else {
                                                     // Lấy chuỗi base64 từ qrCode
-                                                    final qrCodeData = snapshot
-                                                        .data!.qrCode!;
+                                                    final qrCodeData =
+                                                        snapshot.data!.qrCode!;
                                                     // Hình ảnh QR code từ base64
                                                     return Container(
                                                       padding: EdgeInsets.all(
@@ -273,12 +269,12 @@ class _HomePageState extends State<HomePage> {
                                                                 .circular(5),
                                                         boxShadow: [
                                                           BoxShadow(
-                                                            color: Colors
-                                                                .black
+                                                            color: Colors.black
                                                                 .withOpacity(
                                                                     0.25),
-                                                            offset: const Offset(
-                                                                4, 4),
+                                                            offset:
+                                                                const Offset(
+                                                                    4, 4),
                                                             blurRadius: 4,
                                                           ),
                                                         ],
@@ -286,7 +282,7 @@ class _HomePageState extends State<HomePage> {
                                                       child: Image.memory(
                                                         base64Decode(qrCodeData
                                                             .split(',')
-                                                            .last), // Bỏ phần "data:image/png;base64,"
+                                                            .last),
                                                         height:
                                                             screenWidth * 0.5,
                                                         width:
@@ -313,6 +309,8 @@ class _HomePageState extends State<HomePage> {
                                                         Colors.black54,
                                                     builder: (context) =>
                                                         Dialog(
+                                                      backgroundColor:
+                                                          Colors.white,
                                                       shape:
                                                           RoundedRectangleBorder(
                                                         borderRadius:
@@ -548,6 +546,7 @@ class _HomePageState extends State<HomePage> {
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: IconButton(
+                      iconSize: 20,
                       onPressed: () {},
                       icon: const Icon(
                         Icons.calendar_month,
@@ -570,7 +569,7 @@ class _HomePageState extends State<HomePage> {
                       decoration: BoxDecoration(
                         color: day['isToday']
                             ? const Color(0xFF2EB67D)
-                            : Color(0xFFBEC3C1),
+                            : Color.fromARGB(255, 159, 160, 160),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Column(
@@ -583,7 +582,7 @@ class _HomePageState extends State<HomePage> {
                                 fontSize: 14,
                                 color: day['isToday']
                                     ? Colors.white
-                                    : Colors.black,
+                                    : Colors.white,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -596,7 +595,7 @@ class _HomePageState extends State<HomePage> {
                                 fontSize: 16,
                                 color: day['isToday']
                                     ? Colors.white
-                                    : Colors.black,
+                                    : Colors.white,
                               ),
                             ),
                           ),
@@ -608,7 +607,7 @@ class _HomePageState extends State<HomePage> {
                               shape: BoxShape.circle,
                               color: day['isToday']
                                   ? Color(0xFFD6FFCE)
-                                  : Colors.orange,
+                                  : Color.fromARGB(255, 215, 221, 219),
                             ),
                           ),
                         ],
@@ -673,7 +672,159 @@ class _HomePageState extends State<HomePage> {
                   )
                 ],
               ),
-            )
+            ),
+            SizedBox(
+              height: 10,
+            ),
+            Container(
+              margin: EdgeInsets.all(10),
+              height: 340,
+              width: 411,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                // image: const DecorationImage(
+                //   image: AssetImage(
+                //       'assets/event_background.png'), // Thêm hình nền sự kiện
+                //   fit: BoxFit.cover,
+                // ),
+                color: Color(0xFF068998)
+              ),
+              child: Stack(
+                children: [
+                  // Góc trên bên trái: Tên sự kiện
+                  Positioned(
+                    top: 15,
+                    left: 15,
+                    child: SizedBox(
+                      width: screenWidth *
+                          0.6, // Giới hạn chiều rộng để tránh tràn
+                      child: Text(
+                        "Webinar: X's Grok AI is scanning your tweets. Here's how to disable it",
+                        style: GoogleFonts.baloo2(
+                          textStyle: const TextStyle(
+                            fontSize: 18,
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Góc trên bên phải: Ngày tháng và giờ
+                  Positioned(
+                    top: 15,
+                    right: 15,
+                    child: Container(
+                      height: 70,
+                      width: 100,
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.withOpacity(0.9),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Text(
+                            "Tuesday",
+                            style: GoogleFonts.baloo2(
+                              textStyle: const TextStyle(
+                                fontSize: 14,
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          Text(
+                            "25-2-2025",
+                            style: GoogleFonts.baloo2(
+                              textStyle: const TextStyle(
+                                fontSize: 12,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                          Text(
+                            "15:30 (GMT+7)",
+                            style: GoogleFonts.baloo2(
+                              textStyle: const TextStyle(
+                                fontSize: 12,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  // Góc dưới bên trái: Icon và Text "Google Meet"
+                  Positioned(
+                    bottom: 15,
+                    left: 15,
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons
+                              .location_on, // Icon Google Meet (thay thế nếu bạn có icon cụ thể)
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 5),
+                        Text(
+                          "Google Meet",
+                          style: GoogleFonts.baloo2(
+                            textStyle: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Góc dưới bên phải: Nút "Register now"
+                  Positioned(
+                    bottom: 15,
+                    right: 15,
+                    child: OutlinedButton(
+                      onPressed: () {
+                        // Xử lý khi nhấn nút
+                      },
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: Colors.white),
+                        backgroundColor: const Color(0xFFFFFFFF).withOpacity(0.77),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 15, vertical: 8),
+                      ),
+                      child: Row(
+                        children: [
+                          Text(
+                            "Register now",
+                            style: GoogleFonts.baloo2(
+                              textStyle: const TextStyle(
+                                fontSize: 14,
+                                color: Colors.black,
+                                fontWeight: FontWeight.bold
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 5),
+                          const Icon(
+                            Icons.arrow_forward,
+                            color: Colors.black,
+                            size: 16,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),
