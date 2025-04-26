@@ -19,8 +19,11 @@ Future<int?> login(String email, String password) async {
       // Lưu token vào SharedPreferences
       SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setString('token', data['token']);
-      await prefs.setString('idUser', data['userId']);  
+      await prefs.setString('idUser', data['userId']);
+      await prefs.setString('employeeID', data["employeeID"]);
       print('Token saved: ${data['token']}');
+      print('IDUser saved: ${data['userId']}');
+      print('EmployeeID saved: ${data['employeeID']}');
       return response.statusCode;
     } else {
       print('Request failed with status: ${response.statusCode}');

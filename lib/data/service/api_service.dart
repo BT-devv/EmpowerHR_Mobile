@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -5,7 +6,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 class ApiService {
   static String createApiUrl(String endpoint) {
     final port = dotenv.env['PORT'] ?? '3000'; // Lấy cổng từ .env
-    final baseUrl = 'http://192.168.100.68:$port/api/'; // URL
+    final baseUrl = 'http://192.168.1.12:$port/api/'; // URL
     print('URL: $baseUrl$endpoint');
     return '$baseUrl$endpoint';
   }
@@ -28,6 +29,46 @@ class ApiService {
     }
   }
 
+  Future<http.Response> postReq2(
+    Map<String, dynamic> data,
+    String endpoint, {
+    Map<String, String>? headers,
+  }) async {
+    // Kiểm tra endpoint không rỗng
+    if (endpoint.isEmpty) {
+      throw ArgumentError('Endpoint cannot be empty');
+    }
+
+    // Kiểm tra data không null
+    if (data.isEmpty) {
+      throw ArgumentError('Data cannot be empty');
+    }
+
+    final url = createApiUrl(endpoint);
+    try {
+      print("Attempting to post data to $url with body: $data");
+      print("Headers: ${headers ?? {"Content-Type": "application/json"}}");
+
+      final response = await http
+          .post(
+            Uri.parse(url),
+            headers: headers ?? {"Content-Type": "application/json"},
+            body: jsonEncode(data),
+          )
+          .timeout(
+            const Duration(seconds: 10),
+            onTimeout: () =>
+                throw TimeoutException('Request timed out after 10 seconds'),
+          );
+
+      print("Received response: ${response.statusCode} - ${response.body}");
+      return response;
+    } catch (error) {
+      print('Error occurred during POST request to $url: $error');
+      rethrow;
+    }
+  }
+
   Future<http.Response> getReq(String endpoint,
       {Map<String, String>? headers}) async {
     final url = createApiUrl(endpoint);
@@ -41,6 +82,25 @@ class ApiService {
       return response;
     } catch (error) {
       print('Error occurred during GET request: $error');
+      rethrow;
+    }
+  }
+
+  Future<http.Response> putReq(Map<String, dynamic> data, String endpoint,
+      {Map<String, String>? headers}) async {
+    final url = createApiUrl(endpoint);
+    try {
+      print(
+          "Attempting to put data to $url with body: $data and headers: $headers");
+      final response = await http.put(
+        Uri.parse(url),
+        headers: headers ?? {"Content-Type": "application/json"},
+        body: jsonEncode(data),
+      );
+
+      return response;
+    } catch (error) {
+      print('Error occurred during PUT request: $error');
       rethrow;
     }
   }

@@ -1,0 +1,2 @@
+C:/Users/ASUS/CapStone/EmpowerHR_Moblie/android/app/.cxx/Debug/62293cp4/x86_64/CMakeFiles/edit_cache.dir
+C:/Users/ASUS/CapStone/EmpowerHR_Moblie/android/app/.cxx/Debug/62293cp4/x86_64/CMakeFiles/rebuild_cache.dir

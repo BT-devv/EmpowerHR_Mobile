@@ -20,6 +20,9 @@ dependencies:
   shared_preferences: ^2.3.4
   equatable: ^2.0.7
   intl: ^0.18.1
+  fl_chart: ^0.68.0
+  image_picker: ^1.1.2
+  permission_handler: ^11.3.1
   
 
 dev_dependencies:
@@ -71,4 +74,29 @@ flutter:
     - assets/CombinedShape.png
     - assets/background_account.png
     - assets/chevron-left.png
+    - assets/edit_info.png
+    - assets/headerWorklog.png
+    - assets/bacgroundPopup.png
+    - assets/camera.png
+    - assets/photo.png
+    - assets/absence_form_bg.png
+    - assets/create_request_bg.png
+    - assets/overtime_bg.png
+    - assets/calendar-day.png
+    - assets/calendar-daysColor.png
+    - assets/backgroundMess.png
+    - assets/backgroundetailMess.png
+    - assets/header_calender/header_1.png
+    - assets/header_calender/header_2.png
+    - assets/header_calender/header_3.png
+    - assets/header_calender/header_4.png
+    - assets/header_calender/header_5.png
+    - assets/header_calender/header_6.png
+    - assets/header_calender/header_7.png
+    - assets/header_calender/header_8.png
+    - assets/header_calender/header_9.png
+    - assets/header_calender/header_10.png
+    - assets/header_calender/header_11.png
+    - assets/header_calender/header_12.png
+    - assets/background_notification.png
 
