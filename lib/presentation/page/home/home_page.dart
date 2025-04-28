@@ -1,4 +1,5 @@
 import 'package:empowerhr_moblie/domain/usecases/QRCodeResponse_usecase.dart';
+import 'package:empowerhr_moblie/presentation/page/home/notification_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -511,7 +512,14 @@ class _HomePageState extends State<HomePage> {
                           color: const Color(0xFF80C0A5),
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: Image.asset('assets/thongbao.png'),
+                        child: IconButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => NotificationPage()),
+                              );
+                            },
+                            icon: Image.asset('assets/thongbao.png')),
                       ),
                     ],
                   ),
@@ -681,14 +689,13 @@ class _HomePageState extends State<HomePage> {
               height: 340,
               width: 411,
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10),
-                // image: const DecorationImage(
-                //   image: AssetImage(
-                //       'assets/event_background.png'), // Thêm hình nền sự kiện
-                //   fit: BoxFit.cover,
-                // ),
-                color: Color(0xFF068998)
-              ),
+                  borderRadius: BorderRadius.circular(10),
+                  // image: const DecorationImage(
+                  //   image: AssetImage(
+                  //       'assets/event_background.png'), // Thêm hình nền sự kiện
+                  //   fit: BoxFit.cover,
+                  // ),
+                  color: Color(0xFF068998)),
               child: Stack(
                 children: [
                   // Góc trên bên trái: Tên sự kiện
@@ -793,7 +800,8 @@ class _HomePageState extends State<HomePage> {
                       },
                       style: OutlinedButton.styleFrom(
                         side: const BorderSide(color: Colors.white),
-                        backgroundColor: const Color(0xFFFFFFFF).withOpacity(0.77),
+                        backgroundColor:
+                            const Color(0xFFFFFFFF).withOpacity(0.77),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
@@ -806,10 +814,9 @@ class _HomePageState extends State<HomePage> {
                             "Register now",
                             style: GoogleFonts.baloo2(
                               textStyle: const TextStyle(
-                                fontSize: 14,
-                                color: Colors.black,
-                                fontWeight: FontWeight.bold
-                              ),
+                                  fontSize: 14,
+                                  color: Colors.black,
+                                  fontWeight: FontWeight.bold),
                             ),
                           ),
                           const SizedBox(width: 5),

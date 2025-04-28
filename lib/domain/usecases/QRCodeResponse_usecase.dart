@@ -27,12 +27,10 @@ class QRCodeResponse {
 
 Future<QRCodeResponse> getQRCode() async {
   try {
-    // Lấy token và idUser từ SharedPreferences
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString('token');
     String? idUser = prefs.getString('idUser');
 
-    // Kiểm tra xem token và idUser có tồn tại hay không
     if (token == null || idUser == null) {
       return QRCodeResponse(
         success: false,
@@ -40,13 +38,11 @@ Future<QRCodeResponse> getQRCode() async {
       );
     }
 
-    // Tạo header với token để xác thực
     final headers = {
       'Authorization': 'Bearer $token',
       'Content-Type': 'application/json',
     };
 
-    // Thêm idUser vào endpoint
     final endpoint = 'user/qrcode/$idUser'; // Endpoint với idUser
 
     // Gọi phương thức getReq từ ApiService

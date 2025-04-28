@@ -1,4 +1,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<uses-permission android:name="android.permission.CAMERA" />
+    <!-- Quyền truy cập bộ nhớ/thư viện ảnh -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <!-- Dành cho Android 12 trở xuống (nếu cần hỗ trợ) -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+
+    <!-- Khai báo tính năng camera (không bắt buộc nếu ứng dụng vẫn hoạt động khi không có camera) -->
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
     <application
         android:label="empowerhr_moblie"
         android:name="${applicationName}"

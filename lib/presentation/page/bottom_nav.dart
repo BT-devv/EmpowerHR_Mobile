@@ -1,9 +1,9 @@
+import 'package:empowerhr_moblie/presentation/page/calendar/Calendar_page.dart';
 import 'package:flutter/material.dart';
 import 'package:empowerhr_moblie/presentation/page/account/account_page.dart';
 import 'package:empowerhr_moblie/presentation/page/chat/chat_page.dart';
 import 'package:empowerhr_moblie/presentation/page/home/home_page.dart';
-import 'package:empowerhr_moblie/presentation/page/project/project_page.dart';
-import 'package:empowerhr_moblie/presentation/page/report/report_page.dart';
+import 'package:empowerhr_moblie/presentation/page/worklog/worklog_page.dart';
 
 class BottomNavBar extends StatefulWidget {
   @override
@@ -16,8 +16,8 @@ class _BottomNavBarState extends State<BottomNavBar> {
   final List<Widget> _pages = [
     HomePage(),
     ChatPage(),
-    ProjectPage(),
-    ReportPage(),
+    CalendarPage(),
+    WorkLogPage(),
     AccountPage(),
   ];
 
@@ -26,6 +26,7 @@ class _BottomNavBarState extends State<BottomNavBar> {
     return Scaffold(
       body: _pages[_currentIndex], // Display the current page
       bottomNavigationBar: BottomNavigationBar(
+        backgroundColor: Colors.white,
         currentIndex: _currentIndex,
        
         onTap: (index) {
@@ -38,9 +39,9 @@ class _BottomNavBarState extends State<BottomNavBar> {
               'assets/icons/home_icon1.png', 0),
           _buildNavItem('Chat', 'assets/icons/chat_icon1.png',
               'assets/icons/chat_icon2.png', 1),
-          _buildNavItem('Project', 'assets/icons/project_icon1.png',
-              'assets/icons/project_icon2.png', 2),
-          _buildNavItem('Report', 'assets/icons/report_icon1.png',
+          _buildNavItem('Calendar', 'assets/calendar-day.png',
+              'assets/calendar-daysColor.png', 2),
+          _buildNavItem('WorkLog', 'assets/icons/report_icon1.png',
               'assets/icons/report_icon2.png', 3),
           _buildNavItem('Account', 'assets/icons/account_icon1.png',
               'assets/icons/account_icon2.png', 4),
