@@ -22,14 +22,10 @@ class _AbsenceRequestFormState extends State<AbsenceRequestForm> {
   bool _isLoadingCoworkers = false;
   bool _isSubmitting = false;
 
-  // Biến mới cho Half-day và Full-day
+  // Biến mới cho Half-day, Full-day và Leaving period
   String? _halfDayShift; // Lưu giá trị dropdown: "Buổi sáng" hoặc "Buổi tối"
-  final TextEditingController _fullDayDateController =
-      TextEditingController(); // Controller cho ngày Full-day
-
-  // Controllers cho các trường nhập liệu
-  final TextEditingController _dateFromController = TextEditingController();
-  final TextEditingController _dateToController = TextEditingController();
+  final TextEditingController _dateController =
+      TextEditingController(); // Controller cho ngày (dùng chung)
   final TextEditingController _reasonController = TextEditingController();
   final TextEditingController _fromHourController = TextEditingController();
   final TextEditingController _fromMinuteController = TextEditingController();
@@ -40,6 +36,9 @@ class _AbsenceRequestFormState extends State<AbsenceRequestForm> {
 
   // Hàm hiển thị SnackBar thống nhất
   void _showSnackBar(String message, {bool isSuccess = true}) {
+    double screenHeight = MediaQuery.of(context).size.height;
+    double widgetHeight = 100; // Giả sử chiều cao widget
+    double bottomMargin = (screenHeight - widgetHeight) / 2;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -62,7 +61,8 @@ class _AbsenceRequestFormState extends State<AbsenceRequestForm> {
         ),
         backgroundColor: Colors.white,
         behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.only(top: 5, left: 5, right: 5, bottom: 20),
+        margin:
+            EdgeInsets.only(top: 5, left: 5, right: 5, bottom: bottomMargin),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
           side: BorderSide(
@@ -163,8 +163,39 @@ class _AbsenceRequestFormState extends State<AbsenceRequestForm> {
     );
   }
 
+  // Hàm kiểm tra tính hợp lệ của giờ và phút
+  bool _isValidTime(String hour, String minute) {
+    if (hour.isEmpty || minute.isEmpty) return false;
+    final intHour = int.tryParse(hour);
+    final intMinute = int.tryParse(minute);
+    if (intHour == null || intMinute == null) return false;
+    return intHour >= 0 && intHour <= 23 && intMinute >= 0 && intMinute <= 59;
+  }
+
+  // Hàm so sánh thời gian khi cùng ngày
+  bool _isTimeValidOnSameDay(
+      String fromHour, String fromMinute, String toHour, String toMinute) {
+    final intFromHour = int.parse(fromHour);
+    final intFromMinute = int.parse(fromMinute);
+    final intToHour = int.parse(toHour);
+    final intToMinute = int.parse(toMinute);
+
+    // So sánh giờ
+    if (intFromHour > intToHour) return false;
+    if (intFromHour == intToHour && intFromMinute >= intToMinute) return false;
+    return true;
+  }
+
   Future<void> _submitRequest() async {
     if (_isSubmitting) return; // Ngăn nhấn SUBMIT nhiều lần
+    String displayType = _absenceType;
+    if (_absenceType == 'Half Day') {
+      displayType = 'Half Day (${_halfDayShift ?? ''})';
+    } else if (_absenceType == 'Leaving period') {
+      displayType = 'Leaving Period';
+    } else {
+      displayType = 'Full Day';
+    }
 
     // Validate input
     final prefs = await SharedPreferences.getInstance();
@@ -186,42 +217,70 @@ class _AbsenceRequestFormState extends State<AbsenceRequestForm> {
       return;
     }
 
-    // Validate thêm cho Half-day và Full-day
+    // Validate thêm cho Half-day, Full-day và Leaving period
     if (_absenceType == 'Half Day' && _halfDayShift == null) {
       _showSnackBar('Vui lòng chọn buổi nghỉ (sáng/tối)', isSuccess: false);
       return;
     }
-    if (_absenceType == 'Full Day' && _fullDayDateController.text.isEmpty) {
-      _showSnackBar('Vui lòng chọn ngày nghỉ', isSuccess: false);
+    if (_dateController.text.isEmpty) {
+      _showSnackBar('Vui lòng chọn ngày', isSuccess: false);
       return;
     }
 
     // Chuẩn bị dữ liệu ngày giờ
     String dateFrom;
     String dateTo;
+    final selectedDate = _dateController.text;
+
+    // Ánh xạ giá trị type để backend chấp nhận
+    String requestType = _absenceType;
+    if (_absenceType == 'Leaving period') {
+      requestType =
+          'Half Day'; // Ánh xạ "Leaving period" thành "Half Day" để backend chấp nhận
+    }
+
     if (_shouldShowDateFields()) {
       // Leaving Period
-      dateFrom = _dateFromController.text;
-      dateTo = _dateToController.text;
-      if (dateFrom.isEmpty || dateTo.isEmpty) {
-        _showSnackBar('Vui lòng chọn ngày bắt đầu và kết thúc',
-            isSuccess: false);
+      if (selectedDate.isEmpty) {
+        _showSnackBar('Vui lòng chọn ngày', isSuccess: false);
         return;
       }
-      if (_fromHourController.text.isNotEmpty &&
-          _fromMinuteController.text.isNotEmpty) {
-        dateFrom =
-            '$dateFrom ${_fromHourController.text}:${_fromMinuteController.text}:00';
+
+      // Kiểm tra các trường giờ và phút
+      if (_fromHourController.text.isEmpty ||
+          _fromMinuteController.text.isEmpty ||
+          _toHourController.text.isEmpty ||
+          _toMinuteController.text.isEmpty) {
+        _showSnackBar('Vui lòng nhập đầy đủ giờ và phút', isSuccess: false);
+        return;
       }
-      if (_toHourController.text.isNotEmpty &&
-          _toMinuteController.text.isNotEmpty) {
-        dateTo =
-            '$dateTo ${_toHourController.text}:${_toMinuteController.text}:00';
+
+      // Kiểm tra tính hợp lệ của giờ và phút
+      if (!_isValidTime(_fromHourController.text, _fromMinuteController.text) ||
+          !_isValidTime(_toHourController.text, _toMinuteController.text)) {
+        _showSnackBar('Giờ hoặc phút không hợp lệ', isSuccess: false);
+        return;
       }
+
+      // Kiểm tra thời gian (giờ quay lại phải lớn hơn giờ rời)
+      if (!_isTimeValidOnSameDay(
+          _fromHourController.text,
+          _fromMinuteController.text,
+          _toHourController.text,
+          _toMinuteController.text)) {
+        _showSnackBar('Giờ quay lại phải lớn hơn giờ rời', isSuccess: false);
+        return;
+      }
+
+      // Chuẩn bị dữ liệu giờ (giống định dạng Half Day)
+      dateFrom =
+          '$selectedDate ${_fromHourController.text.padLeft(2, '0')}:${_fromMinuteController.text.padLeft(2, '0')}:00';
+      dateTo =
+          '$selectedDate ${_toHourController.text.padLeft(2, '0')}:${_toMinuteController.text.padLeft(2, '0')}:00';
     } else if (_absenceType == 'Half Day') {
       // Half Day: Dùng ngày hiện tại, thêm giờ dựa trên _halfDayShift
-      dateFrom = _fullDayDateController.text;
-      dateTo = dateFrom;
+      dateFrom = selectedDate;
+      dateTo = selectedDate;
       if (_halfDayShift == 'Buổi sáng') {
         dateFrom = '$dateFrom 08:00:00'; // Giả sử buổi sáng từ 8h
         dateTo = '$dateTo 12:00:00';
@@ -230,36 +289,35 @@ class _AbsenceRequestFormState extends State<AbsenceRequestForm> {
         dateTo = '$dateTo 17:00:00';
       }
     } else {
-      // Full Day: Dùng ngày từ _fullDayDateController
-      dateFrom = _fullDayDateController.text;
-      dateTo = dateFrom;
+      // Full Day: Dùng ngày từ _dateController
+      dateFrom = selectedDate;
+      dateTo = selectedDate;
     }
 
-    // Gọi API với trạng thái loading
+    // Gọi API chung cho tất cả loại yêu cầu
     setState(() => _isSubmitting = true);
     try {
       final result = await AbsenceRequest(
         employeeID: employeeID,
-        type: _absenceType,
+        type: requestType, // Sử dụng giá trị type đã ánh xạ
         dateFrom: dateFrom,
         dateTo: dateTo,
         lineManagers: _selectedManager!.id,
         coworkers: _selectedCoworker?.id ?? '',
         reason: _reasonController.text,
       );
-
+      final successMessage =
+          'Yêu cầu xin nghỉ $displayType vào ngày ${dateFrom.split(' ')[0]} thành công!';
       // Xử lý kết quả
       if (result is Map<String, dynamic> && result['success'] == true) {
-        _showSnackBar(result['message'] as String, isSuccess: true);
+        _showSnackBar(successMessage, isSuccess: true);
         setState(() {
           _absenceType = 'Half-day absence';
           _selectedManager = null;
           _selectedCoworker = null;
-          _halfDayShift = null; // Reset dropdown
-          _fullDayDateController.clear(); // Reset ngày Full-day
+          _halfDayShift = null;
+          _dateController.clear();
           _reasonController.clear();
-          _dateFromController.clear();
-          _dateToController.clear();
           _fromHourController.clear();
           _fromMinuteController.clear();
           _toHourController.clear();
@@ -418,7 +476,7 @@ class _AbsenceRequestFormState extends State<AbsenceRequestForm> {
     );
   }
 
-  // Widget mới: Dropdown cho Half-day
+  // Widget: Dropdown cho Half-day
   Widget _buildHalfDayDropdown() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -434,9 +492,7 @@ class _AbsenceRequestFormState extends State<AbsenceRequestForm> {
         const SizedBox(height: 10),
         LayoutBuilder(
           builder: (context, constraints) {
-            // Lấy chiều rộng của container cha (trừ padding ngang 20px)
-            final containerWidth =
-                constraints.maxWidth - 40; // Trừ padding 20px mỗi bên
+            final containerWidth = constraints.maxWidth - 40;
             return Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Container(
@@ -451,12 +507,11 @@ class _AbsenceRequestFormState extends State<AbsenceRequestForm> {
                   onSelected: (value) {
                     setState(() => _halfDayShift = value);
                   },
-                  offset: const Offset(
-                      0, 45), // Đặt vị trí menu ngay dưới container
+                  offset: const Offset(0, 45),
                   constraints: BoxConstraints(
                     minWidth: containerWidth,
                     maxWidth: containerWidth,
-                  ), // Đặt chiều rộng menu bằng container
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                     side: const BorderSide(color: Colors.black),
@@ -514,8 +569,8 @@ class _AbsenceRequestFormState extends State<AbsenceRequestForm> {
     );
   }
 
-  // Widget mới: Thanh chọn ngày cho Full-day
-  Widget _buildFullDayDatePicker() {
+  // Widget: Thanh chọn ngày (dùng chung cho Half-day, Full-day và Leaving period)
+  Widget _buildDatePicker() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -537,7 +592,7 @@ class _AbsenceRequestFormState extends State<AbsenceRequestForm> {
               borderRadius: BorderRadius.circular(8),
             ),
             child: TextField(
-              controller: _fullDayDateController,
+              controller: _dateController,
               decoration: InputDecoration(
                 hintText: 'Select date (YYYY-MM-DD)',
                 hintStyle: GoogleFonts.baloo2(fontSize: 16, color: Colors.grey),
@@ -557,19 +612,16 @@ class _AbsenceRequestFormState extends State<AbsenceRequestForm> {
                   builder: (context, child) {
                     return Theme(
                       data: Theme.of(context).copyWith(
-                        dialogBackgroundColor:
-                            Colors.white, // Background màu trắng
+                        dialogBackgroundColor: Colors.white,
                         colorScheme: const ColorScheme.light(
-                          primary: Color(0xFF2EB67D), // Màu của ngày được chọn
-                          onPrimary:
-                              Colors.white, // Màu chữ trên ngày được chọn
-                          surface: Colors.white, // Nền của DatePicker
-                          onSurface: Colors.black, // Màu chữ (ngày, tháng, năm)
+                          primary: Color(0xFF2EB67D),
+                          onPrimary: Colors.white,
+                          surface: Colors.white,
+                          onSurface: Colors.black,
                         ),
                         textButtonTheme: TextButtonThemeData(
                           style: TextButton.styleFrom(
-                            foregroundColor: const Color(
-                                0xFF2EB67D), // Màu nút "OK", "Cancel"
+                            foregroundColor: const Color(0xFF2EB67D),
                           ),
                         ),
                       ),
@@ -579,7 +631,7 @@ class _AbsenceRequestFormState extends State<AbsenceRequestForm> {
                 );
                 if (pickedDate != null) {
                   setState(() {
-                    _fullDayDateController.text =
+                    _dateController.text =
                         pickedDate.toIso8601String().split('T')[0];
                   });
                 }
@@ -683,11 +735,9 @@ class _AbsenceRequestFormState extends State<AbsenceRequestForm> {
                 const SizedBox(height: 20),
                 _buildReportToLineManager(),
                 _buildAddCoworker(),
-                // Thêm Dropdown cho Half-day và Date Picker cho Full-day
+                // Thêm Dropdown cho Half-day và Date Picker cho tất cả
                 if (_absenceType == 'Half Day') _buildHalfDayDropdown(),
-                if (_absenceType == 'Half Day') _buildFullDayDatePicker(),
-                if (_absenceType == 'Full Day') _buildFullDayDatePicker(),
-                
+                _buildDatePicker(),
                 if (_shouldShowDateFields()) ...[
                   Padding(
                     padding: const EdgeInsets.only(left: 20),
@@ -699,8 +749,9 @@ class _AbsenceRequestFormState extends State<AbsenceRequestForm> {
                   ),
                   const SizedBox(height: 10),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    padding: const EdgeInsets.only(left: 20, right: 20),
                     child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         SizedBox(
                           width: 50,
@@ -712,6 +763,17 @@ class _AbsenceRequestFormState extends State<AbsenceRequestForm> {
                                   borderRadius: BorderRadius.circular(14)),
                             ),
                             keyboardType: TextInputType.number,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Text(
+                          ':',
+                          style: GoogleFonts.baloo2(
+                            textStyle: const TextStyle(
+                              fontSize: 20,
+                              color: Colors.black,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                         const SizedBox(width: 10),
@@ -728,51 +790,17 @@ class _AbsenceRequestFormState extends State<AbsenceRequestForm> {
                           ),
                         ),
                         const SizedBox(width: 10),
-                        Expanded(
-                          child: TextField(
-                            controller: _dateFromController,
-                            decoration: InputDecoration(
-                              hintText: 'Select date (YYYY-MM-DD)',
-                              border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8)),
-                              suffixIcon: const Icon(Icons.calendar_today,
-                                  color: Colors.grey, size: 20),
+                        Text(
+                          'To:',
+                          style: GoogleFonts.baloo2(
+                            textStyle: const TextStyle(
+                              fontSize: 16,
+                              color: Colors.black,
+                              fontWeight: FontWeight.bold,
                             ),
-                            readOnly: true,
-                            onTap: () async {
-                              final pickedDate = await showDatePicker(
-                                context: context,
-                                initialDate: DateTime.now(),
-                                firstDate: DateTime.now(),
-                                lastDate: DateTime(2100),
-                              );
-                              if (pickedDate != null) {
-                                setState(() {
-                                  _dateFromController.text = pickedDate
-                                      .toIso8601String()
-                                      .split('T')[0];
-                                });
-                              }
-                            },
                           ),
                         ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 20),
-                    child: Text(
-                      'To:',
-                      style: GoogleFonts.baloo2(
-                          fontSize: 16, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Row(
-                      children: [
+                        const SizedBox(width: 10),
                         SizedBox(
                           width: 50,
                           child: TextField(
@@ -783,6 +811,17 @@ class _AbsenceRequestFormState extends State<AbsenceRequestForm> {
                                   borderRadius: BorderRadius.circular(14)),
                             ),
                             keyboardType: TextInputType.number,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Text(
+                          ':',
+                          style: GoogleFonts.baloo2(
+                            textStyle: const TextStyle(
+                              fontSize: 20,
+                              color: Colors.black,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                         const SizedBox(width: 10),
@@ -799,34 +838,6 @@ class _AbsenceRequestFormState extends State<AbsenceRequestForm> {
                           ),
                         ),
                         const SizedBox(width: 10),
-                        Expanded(
-                          child: TextField(
-                            controller: _dateToController,
-                            decoration: InputDecoration(
-                              hintText: 'Select date (YYYY-MM-DD)',
-                              border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8)),
-                              suffixIcon: const Icon(Icons.calendar_today,
-                                  color: Colors.grey, size: 20),
-                            ),
-                            readOnly: true,
-                            onTap: () async {
-                              final pickedDate = await showDatePicker(
-                                context: context,
-                                initialDate: DateTime.now(),
-                                firstDate: DateTime.now(),
-                                lastDate: DateTime(2100),
-                              );
-                              if (pickedDate != null) {
-                                setState(() {
-                                  _dateToController.text = pickedDate
-                                      .toIso8601String()
-                                      .split('T')[0];
-                                });
-                              }
-                            },
-                          ),
-                        ),
                       ],
                     ),
                   ),
@@ -902,14 +913,12 @@ class _AbsenceRequestFormState extends State<AbsenceRequestForm> {
 
   @override
   void dispose() {
-    _dateFromController.dispose();
-    _dateToController.dispose();
+    _dateController.dispose();
     _reasonController.dispose();
     _fromHourController.dispose();
     _fromMinuteController.dispose();
     _toHourController.dispose();
     _toMinuteController.dispose();
-    _fullDayDateController.dispose();
     super.dispose();
   }
 }
