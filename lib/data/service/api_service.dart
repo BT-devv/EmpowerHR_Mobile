@@ -6,7 +6,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 class ApiService {
   static String createApiUrl(String endpoint) {
     final port = dotenv.env['PORT'] ?? '3000'; // Lấy cổng từ .env
-    final baseUrl = 'http://192.168.1.12:$port/api/'; // URL
+    final baseUrl = 'http://192.168.1.8:$port/api/'; // URL
     print('URL: $baseUrl$endpoint');
     return '$baseUrl$endpoint';
   }
