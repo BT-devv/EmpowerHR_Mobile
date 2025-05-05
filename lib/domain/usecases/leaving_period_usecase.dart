@@ -15,7 +15,6 @@ class CheckInUsecase {
     };
 
     try {
-      // Gửi yêu cầu POST với token trong header
       final http.Response response = await apiService.postReq(
         credentials,
         'attendance/check-in',
@@ -26,7 +25,6 @@ class CheckInUsecase {
       if (response.statusCode == 200) {
         return CheckInResponse.fromJson(data);
       } else {
-        // Xử lý các mã lỗi cụ thể
         String errorMessage = data['message'] ?? 'Check-in failed';
         if (response.statusCode == 404) {
           errorMessage = 'Employee not found';

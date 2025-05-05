@@ -83,32 +83,21 @@ class _CreateRequestState extends State<CreateRequest> {
                     onTap: () => Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) =>
-                            AbsenceRequestForm(),
+                        builder: (context) => AbsenceRequestForm(),
                       ),
                     ),
                   ),
-                  const Divider(),
-                  _buildMenuItem(
-                    "Half-day leave request",
-
-                    //onTap: () => _navigateToPage(context, "Change Password"),
-                  ),
-                 
                   const Divider(),
                   _buildMenuItem(
                     "Overtime request",
-
                     onTap: () => Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) =>
-                            OverTimeForm(),
+                        builder: (context) => OverTimeForm(),
                       ),
                     ),
                   ),
                   const Divider(),
-                  
                 ],
               ),
             )

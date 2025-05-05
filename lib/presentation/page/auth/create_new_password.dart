@@ -1,36 +1,49 @@
-import 'package:empowerhr_moblie/presentation/bloc/forgot_password/forgot_password_bloc.dart';
-import 'package:empowerhr_moblie/presentation/bloc/forgot_password/forgot_password_event.dart';
-import 'package:empowerhr_moblie/presentation/bloc/forgot_password/forgot_password_state.dart';
-import 'package:empowerhr_moblie/presentation/page/auth/verify_email.dart';
+import 'package:empowerhr_moblie/domain/usecases/create_new_passwors_usecase.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'package:empowerhr_moblie/presentation/page/auth/login_page.dart'; 
 
 class CreateNewPassword extends StatefulWidget {
-  CreateNewPassword({super.key});
+  final String email; 
+  const CreateNewPassword({super.key, required this.email});
 
   @override
   State<CreateNewPassword> createState() => _CreateNewPassword_pageState();
 }
 
 class _CreateNewPassword_pageState extends State<CreateNewPassword> {
-  bool isEmailFocus = false;
-  TextEditingController emailController = TextEditingController();
-  FocusNode _emailFocus = FocusNode();
+  final TextEditingController _newPasswordController = TextEditingController();
+  final TextEditingController _confirmPasswordController = TextEditingController();
+  final FocusNode _newPasswordFocus = FocusNode();
+  final FocusNode _confirmPasswordFocus = FocusNode();
+  bool isMessageVisible = false; 
+  bool isLoading = false; 
+  bool isNewPasswordVisible = false; 
+  bool isConfirmPasswordVisible = false; 
+
   @override
   void initState() {
     super.initState();
-    _emailFocus.addListener(() {
-      setState(() {
-        isEmailFocus = _emailFocus.hasFocus;
-      });
+    
+    setState(() {
+      isMessageVisible = true;
+    });
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted) {
+        setState(() {
+          isMessageVisible = false;
+        });
+      }
     });
   }
 
+  @override
   void dispose() {
-    emailController.dispose();
-    _emailFocus.dispose();
+    _newPasswordController.dispose();
+    _confirmPasswordController.dispose();
+    _newPasswordFocus.dispose();
+    _confirmPasswordFocus.dispose();
     super.dispose();
   }
 
@@ -51,119 +64,182 @@ class _CreateNewPassword_pageState extends State<CreateNewPassword> {
         elevation: 0,
       ),
       backgroundColor: const Color(0xFFFFFFFF),
-      body: BlocProvider(
-        create: (_) => ForgotPasswordBloc(),
-        child: BlocConsumer<ForgotPasswordBloc, ForgotPasswordState>(
-          listener: (context, state) {
-            if (state is EmailSubmittedState) {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => VerifyEmail(
-                          email: emailController.text,
-                        )),
-              );
-            }
-          },
-          builder: (context, state) {
-            if (state is ForgotPasswordLoading) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            return SingleChildScrollView(
-              child: Column(
-                children: [
-                  Center(
-                    child: Container(
-                      margin:
-                          const EdgeInsets.only(top: 65, left: 50, right: 50),
-                      child: Image.asset('assets/change_new_password_IMG.png'),
+      body: Stack(
+        children: [
+          SingleChildScrollView(
+            child: Column(
+              children: [
+                Center(
+                  child: Container(
+                    margin: const EdgeInsets.only(top: 65, left: 50, right: 50),
+                    child: Image.asset('assets/change_new_password_IMG.png'),
+                  ),
+                ),
+                Container(
+                  margin: const EdgeInsets.only(top: 20, left: 20, right: 20),
+                  child: Text(
+                    'Your New Password Must Be Different From Previously Used Password.',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.poppins(
+                      textStyle: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                        color: Colors.black,
+                      ),
                     ),
                   ),
-                  Container(
-                    margin: const EdgeInsets.only(top: 20, left: 20, right: 20),
+                ),
+                const SizedBox(height: 20),
+                AnimatedOpacity(
+                  opacity: isMessageVisible ? 1.0 : 0.0,
+                  duration: const Duration(milliseconds: 300),
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 50),
                     child: Text(
-                      'Your New Password Must Be Different From Previously Used Password.',
+                      'Xác nhận mã OTP thành công, vui lòng thay đổi mật khẩu mới',
                       textAlign: TextAlign.center,
                       style: GoogleFonts.poppins(
-                        textStyle: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                          color: Colors.black,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 55,
-                  ),
-                  _buildTextField(
-                    label: "New Pasword",
-                    controller: emailController,
-                    focusNode: _emailFocus,
-                    hintText: "Enter your New Pasword here",
-                  ),
-                   const SizedBox(
-                    height: 20,
-                  ),
-                   _buildTextField(
-                    label: "Confirm Password",
-                    controller: emailController,
-                    focusNode: _emailFocus,
-                    hintText: "Confirm your Password  New Pasword here",
-                  ),
-                  const SizedBox(
-                    height: 20,
-                  ),
-                   Text(
-                    'Change password',
-                    style: GoogleFonts.poppins(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: const Color(0xFF2EB67D),
-                      decoration: TextDecoration.underline,
-                      decorationColor: const Color(0xFF2EB67D),
-                    ),
-                  ),
-                   const SizedBox(
-                    height: 40,
-                  ),
-                  ElevatedButton(
-                    onPressed: () {
-                      final email = emailController.text.trim();
-
-                      if (email.isNotEmpty) {
-                        context
-                            .read<ForgotPasswordBloc>()
-                            .add(SubmitEmailEvent(email));
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                              content:
-                                  Text('Please enter a valid email address')),
-                        );
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF2EB67D),
-                      foregroundColor: Colors.white,
-                      fixedSize: const Size(190, 45),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                    ),
-                    child: Text(
-                      "Save",
-                      style: GoogleFonts.poppins(
-                        fontSize: 20,
+                        fontSize: 14,
                         fontWeight: FontWeight.w500,
+                        color: Colors.green,
                       ),
                     ),
                   ),
-                ],
-              ),
-            );
-          },
-        ),
+                ),
+                const SizedBox(height: 40),
+                _buildTextField(
+                  label: "New Password",
+                  controller: _newPasswordController,
+                  focusNode: _newPasswordFocus,
+                  hintText: "Enter your new password",
+                  isPassword: true,
+                  isPasswordVisible: isNewPasswordVisible,
+                  onToggleVisibility: () {
+                    setState(() {
+                      isNewPasswordVisible = !isNewPasswordVisible;
+                    });
+                  },
+                ),
+                const SizedBox(height: 20),
+                _buildTextField(
+                  label: "Confirm Password",
+                  controller: _confirmPasswordController,
+                  focusNode: _confirmPasswordFocus,
+                  hintText: "Confirm your new password",
+                  isPassword: true,
+                  isPasswordVisible: isConfirmPasswordVisible,
+                  onToggleVisibility: () {
+                    setState(() {
+                      isConfirmPasswordVisible = !isConfirmPasswordVisible;
+                    });
+                  },
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  'Change password',
+                  style: GoogleFonts.poppins(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: const Color(0xFF2EB67D),
+                    decoration: TextDecoration.underline,
+                    decorationColor: const Color(0xFF2EB67D),
+                  ),
+                ),
+                const SizedBox(height: 40),
+                ElevatedButton(
+                  onPressed: isLoading
+                      ? null // Vô hiệu hóa nút khi đang loading
+                      : () async {
+                          final newPassword = _newPasswordController.text.trim();
+                          final confirmPassword =
+                              _confirmPasswordController.text.trim();
+
+                          if (newPassword.isEmpty || confirmPassword.isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Please fill in all fields'),
+                              ),
+                            );
+                            return;
+                          }
+
+                          if (newPassword != confirmPassword) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Passwords do not match'),
+                              ),
+                            );
+                            return;
+                          }
+
+                          setState(() {
+                            isLoading = true; // Bật loading
+                          });
+
+                          try {
+                            // Gọi API resetPassword
+                            final result = await resetPassword(
+                                widget.email, newPassword);
+
+                            if (result['status'] == 200) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(result['message']),
+                                ),
+                              );
+                              // Chờ 2 giây rồi chuyển về LoginPage
+                              await Future.delayed(const Duration(seconds: 2));
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => LoginPage(),
+                                ),
+                              );
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(result['message']),
+                                ),
+                              );
+                            }
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Error: $e'),
+                              ),
+                            );
+                          } finally {
+                            setState(() {
+                              isLoading = false; // Tắt loading
+                            });
+                          }
+                        },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF2EB67D),
+                    foregroundColor: Colors.white,
+                    fixedSize: const Size(190, 45),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                  ),
+                  child: Text(
+                    "Save",
+                    style: GoogleFonts.poppins(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 30),
+              ],
+            ),
+          ),
+          if (isLoading)
+            Container(
+              color: Colors.black.withOpacity(0.3),
+              child: const Center(child: CircularProgressIndicator()),
+            ),
+        ],
       ),
     );
   }
@@ -173,6 +249,9 @@ class _CreateNewPassword_pageState extends State<CreateNewPassword> {
     required TextEditingController controller,
     required FocusNode focusNode,
     required String hintText,
+    bool isPassword = false,
+    required bool isPasswordVisible, // Trạng thái hiển thị mật khẩu riêng
+    required VoidCallback onToggleVisibility, // Callback để đổi trạng thái
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -200,21 +279,35 @@ class _CreateNewPassword_pageState extends State<CreateNewPassword> {
           ),
           margin: const EdgeInsets.only(left: 31, right: 31),
           padding: const EdgeInsets.symmetric(horizontal: 12),
-          child: TextField(
-            cursorColor: const Color(0xFF2EB67D),
-            controller: controller,
-            focusNode: focusNode,
-            decoration: InputDecoration(
-              border: InputBorder.none,
-              hintText: hintText,
-              hintStyle: GoogleFonts.poppins(
-                textStyle: const TextStyle(
-                  fontSize: 15,
-                  color: Colors.grey,
+          child: Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  cursorColor: const Color(0xFF2EB67D),
+                  controller: controller,
+                  focusNode: focusNode,
+                  obscureText: isPassword && !isPasswordVisible,
+                  decoration: InputDecoration(
+                    border: InputBorder.none,
+                    hintText: hintText,
+                    hintStyle: GoogleFonts.poppins(
+                      textStyle: const TextStyle(
+                        fontSize: 15,
+                        color: Colors.grey,
+                      ),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 13),
+                  ),
                 ),
               ),
-              contentPadding: const EdgeInsets.symmetric(vertical: 13),
-            ),
+              IconButton(
+                icon: Icon(
+                  isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                  color: const Color(0xFF2EB67D),
+                ),
+                onPressed: onToggleVisibility,
+              ),
+            ],
           ),
         ),
       ],

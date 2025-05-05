@@ -8,19 +8,31 @@ Future<Map<String, dynamic>> AbsenceRequest({
   required String type,
   required String dateFrom,
   required String dateTo,
-  required String lineManagers,
-  required String coworkers,
+  required List<String> lineManagers,
+  required List<String> teammates,
   required String reason,
+  String? session,
+  String? leaveFromTime,
+  String? leaveToTime,
 }) async {
+  final formattedLineManagers = lineManagers.isNotEmpty ? lineManagers : [''];
+  final formattedTeammates = teammates.isNotEmpty ? teammates : [''];
+
+  print('Sending data: {employeeID: $employeeID, type: $type, dateFrom: $dateFrom, dateTo: $dateTo, lineManagers: $formattedLineManagers, teammates: $formattedTeammates, reason: $reason, session: $session, leaveFromTime: $leaveFromTime, leaveToTime: $leaveToTime}');
+
   final credentials = {
     'employeeID': employeeID,
     'type': type,
     'dateFrom': dateFrom,
     'dateTo': dateTo,
-    'lineManagers': lineManagers,
-    'coworkers': coworkers,
+    'lineManagers': formattedLineManagers,
+    'teammates': formattedTeammates,
     'reason': reason,
+    if (session != null) 'session': session,
+    'leaveFromTime': leaveFromTime ?? '',
+    'leaveToTime': leaveToTime ?? '',
   };
+
   try {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString('token');
