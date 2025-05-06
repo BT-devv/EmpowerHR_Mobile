@@ -27,7 +27,9 @@ Future<UserModel> getUserById() async {
     });
 
     final Map<String, dynamic> data = jsonDecode(response.body);
-
+    print("usernamww  w :${data}");
+    await prefs.setString('firstName', data['firstName']);
+    await prefs.setString('lastName', data['lastName']);
     if (response.statusCode == 200) {
       return UserModel.fromJson(data);
     } else {
@@ -36,6 +38,6 @@ Future<UserModel> getUserById() async {
     }
   } catch (error) {
     print('Error fetching user by ID: $error');
-    rethrow; 
+    rethrow;
   }
 }

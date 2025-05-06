@@ -10,21 +10,46 @@ Future<Map<String, dynamic>> requestOvertime({
   required String endTime,
   required String reason,
 }) async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  String? employeeID = prefs.getString('employeeID');
+  String? firstName = prefs.getString('firstName');
+  String? lastName = prefs.getString('lastName');
+  String? token = prefs.getString('token');
+
+  if (employeeID == null || token == null) {
+    return {
+      'success': false,
+      'message': 'Employee ID or token not found',
+    };
+  }
+
+  if (firstName == null || lastName == null) {
+    return {
+      'success': false,
+      'message': 'User name not found in storage',
+    };
+  }
+
+  final name = '$firstName $lastName';
+
   final credentials = {
+    'employeeID': employeeID,
+    'name': name,
     'projectManager': projectManager,
     'date': date,
     'startTime': startTime,
     'endTime': endTime,
     'reason': reason,
   };
+
+  print('Sending data: $credentials');
+
   try {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? token = prefs.getString('token');
     final headers = {
       'Authorization': 'Bearer $token',
       'Content-Type': 'application/json',
     };
-    const endpoint = 'overtime/request'; 
+    const endpoint = 'overtime/request';
     final response = await ApiService()
         .postReq2(
       credentials,
@@ -36,7 +61,7 @@ Future<Map<String, dynamic>> requestOvertime({
     });
 
     final responseBody = jsonDecode(response.body);
-    if (response.statusCode == 200) { // Backend trả về 200 cho thành công
+    if (response.statusCode == 200) {
       return {
         'success': true,
         'message': responseBody['message'] ?? 'Overtime request submitted successfully',

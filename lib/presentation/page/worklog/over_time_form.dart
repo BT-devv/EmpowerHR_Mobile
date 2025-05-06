@@ -16,10 +16,8 @@ class _OverTimeFormState extends State<OverTimeForm> {
   UserModel? _selectedManager;
   bool _isLoadingManagers = false;
 
-  final TextEditingController _startHourController = TextEditingController();
-  final TextEditingController _startMinuteController = TextEditingController();
-  final TextEditingController _endHourController = TextEditingController();
-  final TextEditingController _endMinuteController = TextEditingController();
+  TimeOfDay? _leaveFromTime;
+  TimeOfDay? _leaveToTime;
   final TextEditingController _dateController = TextEditingController();
   final TextEditingController _reasonController = TextEditingController();
 
@@ -194,32 +192,33 @@ class _OverTimeFormState extends State<OverTimeForm> {
       _showSnackBar('Please select a date', isSuccess: false);
       return;
     }
-    if (_startHourController.text.isEmpty || _startMinuteController.text.isEmpty) {
-      _showSnackBar('Please enter start time', isSuccess: false);
+    if (_leaveFromTime == null) {
+      _showSnackBar('Please select start time', isSuccess: false);
       return;
     }
-    if (_endHourController.text.isEmpty || _endMinuteController.text.isEmpty) {
-      _showSnackBar('Please enter end time', isSuccess: false);
+    if (_leaveToTime == null) {
+      _showSnackBar('Please select end time', isSuccess: false);
       return;
     }
     if (_reasonController.text.isEmpty) {
       _showSnackBar('Please enter a reason', isSuccess: false);
       return;
     }
-
-    // Thêm kiểm tra cho employeeID
     if (_selectedManager!.employeeID == null) {
-      _showSnackBar('Selected manager does not have a valid ID', isSuccess: false);
+      _showSnackBar('Selected manager does not have a valid ID',
+          isSuccess: false);
       return;
     }
 
     // Format startTime và endTime thành HH:mm
-    final startTime = '${_startHourController.text.padLeft(2, '0')}:${_startMinuteController.text.padLeft(2, '0')}';
-    final endTime = '${_endHourController.text.padLeft(2, '0')}:${_endMinuteController.text.padLeft(2, '0')}';
+    final startTime =
+        '${_leaveFromTime!.hour.toString().padLeft(2, '0')}:${_leaveFromTime!.minute.toString().padLeft(2, '0')}';
+    final endTime =
+        '${_leaveToTime!.hour.toString().padLeft(2, '0')}:${_leaveToTime!.minute.toString().padLeft(2, '0')}';
 
     // Gọi API requestOvertime
     final result = await requestOvertime(
-      projectManager: _selectedManager!.employeeID!, // An toàn vì đã kiểm tra null
+      projectManager: _selectedManager!.employeeID!,
       date: _dateController.text,
       startTime: startTime,
       endTime: endTime,
@@ -282,118 +281,14 @@ class _OverTimeFormState extends State<OverTimeForm> {
               ],
             ),
             const SizedBox(height: 20),
-
             _buildReportToLineManager(),
-
-            Padding(
-              padding: const EdgeInsets.only(left: 20),
-              child: Text(
-                'Your over-time start from:',
-                style: GoogleFonts.baloo2(
-                  textStyle: const TextStyle(
-                    fontSize: 16,
-                    color: Colors.black,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
+            TimePicker(
+              leaveFromTime: _leaveFromTime,
+              leaveToTime: _leaveToTime,
+              onFromTimeSelected: (time) =>
+                  setState(() => _leaveFromTime = time),
+              onToTimeSelected: (time) => setState(() => _leaveToTime = time),
             ),
-            const SizedBox(height: 10),
-            Padding(
-              padding: const EdgeInsets.only(left: 20, right: 20),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  SizedBox(
-                    width: 50,
-                    child: TextField(
-                      controller: _startHourController,
-                      decoration: InputDecoration(
-                        hintText: 'HH',
-                        border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(14)),
-                      ),
-                      keyboardType: TextInputType.number,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Text(
-                    ':',
-                    style: GoogleFonts.baloo2(
-                      textStyle: const TextStyle(
-                        fontSize: 20,
-                        color: Colors.black,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  SizedBox(
-                    width: 50,
-                    child: TextField(
-                      controller: _startMinuteController,
-                      decoration: InputDecoration(
-                        hintText: 'MM',
-                        border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(14)),
-                      ),
-                      keyboardType: TextInputType.number,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Text(
-                    'To:',
-                    style: GoogleFonts.baloo2(
-                      textStyle: const TextStyle(
-                        fontSize: 16,
-                        color: Colors.black,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  SizedBox(
-                    width: 50,
-                    child: TextField(
-                      controller: _endHourController,
-                      decoration: InputDecoration(
-                        hintText: 'HH',
-                        border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(14)),
-                      ),
-                      keyboardType: TextInputType.number,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Text(
-                    ':',
-                    style: GoogleFonts.baloo2(
-                      textStyle: const TextStyle(
-                        fontSize: 20,
-                        color: Colors.black,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  SizedBox(
-                    width: 50,
-                    child: TextField(
-                      controller: _endMinuteController,
-                      decoration: InputDecoration(
-                        hintText: 'MM',
-                        border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(14)),
-                      ),
-                      keyboardType: TextInputType.number,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-
             Padding(
               padding: const EdgeInsets.only(left: 20, right: 20),
               child: Container(
@@ -406,10 +301,12 @@ class _OverTimeFormState extends State<OverTimeForm> {
                   controller: _dateController,
                   decoration: InputDecoration(
                     hintText: 'Select date (YYYY-MM-DD)',
-                    hintStyle: GoogleFonts.baloo2(fontSize: 16, color: Colors.grey),
+                    hintStyle:
+                        GoogleFonts.baloo2(fontSize: 16, color: Colors.grey),
                     border: InputBorder.none,
                     contentPadding: const EdgeInsets.only(left: 10, top: 8),
-                    suffixIcon: const Icon(Icons.calendar_today, color: Colors.grey, size: 20),
+                    suffixIcon: const Icon(Icons.calendar_today,
+                        color: Colors.grey, size: 20),
                   ),
                   style: GoogleFonts.baloo2(fontSize: 16, color: Colors.black),
                   readOnly: true,
@@ -441,7 +338,8 @@ class _OverTimeFormState extends State<OverTimeForm> {
                     );
                     if (pickedDate != null) {
                       setState(() {
-                        _dateController.text = pickedDate.toIso8601String().split('T')[0];
+                        _dateController.text =
+                            pickedDate.toIso8601String().split('T')[0];
                       });
                     }
                   },
@@ -449,7 +347,6 @@ class _OverTimeFormState extends State<OverTimeForm> {
               ),
             ),
             const SizedBox(height: 20),
-
             Padding(
               padding: const EdgeInsets.only(left: 20),
               child: Text(
@@ -482,7 +379,6 @@ class _OverTimeFormState extends State<OverTimeForm> {
               ),
             ),
             const SizedBox(height: 20),
-
             Padding(
               padding: const EdgeInsets.only(left: 60, right: 60, bottom: 20),
               child: ElevatedButton(
@@ -509,6 +405,128 @@ class _OverTimeFormState extends State<OverTimeForm> {
           ],
         ),
       ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _dateController.dispose();
+    _reasonController.dispose();
+    super.dispose();
+  }
+}
+
+class TimePicker extends StatelessWidget {
+  final TimeOfDay? leaveFromTime;
+  final TimeOfDay? leaveToTime;
+  final Function(TimeOfDay) onFromTimeSelected;
+  final Function(TimeOfDay) onToTimeSelected;
+
+  const TimePicker({
+    super.key,
+    required this.leaveFromTime,
+    required this.leaveToTime,
+    required this.onFromTimeSelected,
+    required this.onToTimeSelected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+            padding: const EdgeInsets.only(left: 20),
+            child: Text('Your over-time start from:',
+                style: GoogleFonts.baloo2(
+                    fontSize: 16, fontWeight: FontWeight.bold))),
+        const SizedBox(height: 10),
+        Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              children: [
+                Expanded(
+                    child: GestureDetector(
+                  onTap: () async {
+                    final time = await showTimePicker(
+                      context: context,
+                      initialTime: TimeOfDay.now(),
+                      builder: (context, child) => Theme(
+                          data: Theme.of(context).copyWith(
+                            colorScheme: const ColorScheme.light(
+                                primary: Color(0xFF2EB67D),
+                                onPrimary: Colors.white,
+                                surface: Colors.white,
+                                onSurface: Colors.black),
+                            textButtonTheme: TextButtonThemeData(
+                                style: TextButton.styleFrom(
+                                    foregroundColor: const Color(0xFF2EB67D))),
+                          ),
+                          child: child!),
+                    );
+                    if (time != null) onFromTimeSelected(time);
+                  },
+                  child: Container(
+                    height: 45,
+                    decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey),
+                        borderRadius: BorderRadius.circular(8)),
+                    child: Center(
+                        child: Text(
+                      leaveFromTime != null
+                          ? '${leaveFromTime!.hour.toString().padLeft(2, '0')}:${leaveFromTime!.minute.toString().padLeft(2, '0')}'
+                          : 'From Time',
+                      style: GoogleFonts.baloo2(
+                          fontSize: 16,
+                          color: leaveFromTime != null
+                              ? Colors.black
+                              : Colors.grey),
+                    )),
+                  ),
+                )),
+                const SizedBox(width: 10),
+                Expanded(
+                    child: GestureDetector(
+                  onTap: () async {
+                    final time = await showTimePicker(
+                      context: context,
+                      initialTime: TimeOfDay.now(),
+                      builder: (context, child) => Theme(
+                          data: Theme.of(context).copyWith(
+                            colorScheme: const ColorScheme.light(
+                                primary: Color(0xFF2EB67D),
+                                onPrimary: Colors.white,
+                                surface: Colors.white,
+                                onSurface: Colors.black),
+                            textButtonTheme: TextButtonThemeData(
+                                style: TextButton.styleFrom(
+                                    foregroundColor: const Color(0xFF2EB67D))),
+                          ),
+                          child: child!),
+                    );
+                    if (time != null) onToTimeSelected(time);
+                  },
+                  child: Container(
+                    height: 45,
+                    decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey),
+                        borderRadius: BorderRadius.circular(8)),
+                    child: Center(
+                        child: Text(
+                      leaveToTime != null
+                          ? '${leaveToTime!.hour.toString().padLeft(2, '0')}:${leaveToTime!.minute.toString().padLeft(2, '0')}'
+                          : 'To Time',
+                      style: GoogleFonts.baloo2(
+                          fontSize: 16,
+                          color:
+                              leaveToTime != null ? Colors.black : Colors.grey),
+                    )),
+                  ),
+                )),
+              ],
+            )),
+        const SizedBox(height: 20),
+      ],
     );
   }
 }
