@@ -10,20 +10,16 @@ class UpdateUserUsecase {
 
   Future<UserModel> execute(String userId, Map<String, dynamic> updatedData, String token) async {
     try {
-      // Loại bỏ các trường null hoặc rỗng khỏi updatedData
       final cleanedData = updatedData..removeWhere((key, value) => value == null || value == '');
 
-      // Tạo header với token
       final headers = {
         "Content-Type": "application/json",
         "Authorization": "Bearer $token",
       };
 
-      // Gọi API PUT với header chứa token
       final endpoint = 'user/$userId';
       final response = await _apiService.putReq(cleanedData, endpoint, headers: headers);
 
-      // Xử lý response
       if (response.statusCode == 200) {
         final jsonResponse = jsonDecode(response.body);
         if (jsonResponse['success'] == true) {

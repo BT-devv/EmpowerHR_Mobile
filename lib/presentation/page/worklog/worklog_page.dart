@@ -10,12 +10,11 @@ class WorkLogPage extends StatelessWidget {
       backgroundColor: Colors.white,
       body: CustomScrollView(
         slivers: [
-          // SliverAppBar cho header
           SliverAppBar(
             backgroundColor: Colors.white,
             elevation: 0,
-            automaticallyImplyLeading: false, // Xóa nút quay lại
-            expandedHeight: 150, // Tăng chiều cao của SliverAppBar
+            automaticallyImplyLeading: false, 
+            expandedHeight: 120, 
             flexibleSpace: FlexibleSpaceBar(
               background: Container(
                 color: Colors.white,

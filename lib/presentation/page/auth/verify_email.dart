@@ -1,10 +1,7 @@
-import 'package:empowerhr_moblie/presentation/bloc/forgot_password/forgot_password_bloc.dart';
-import 'package:empowerhr_moblie/presentation/bloc/forgot_password/forgot_password_event.dart';
-import 'package:empowerhr_moblie/presentation/bloc/forgot_password/forgot_password_state.dart';
+import 'package:empowerhr_moblie/domain/usecases/verify_otp_usecase.dart';
 import 'package:empowerhr_moblie/presentation/page/auth/create_new_password.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
 class VerifyEmail extends StatefulWidget {
   final String email;
@@ -17,8 +14,9 @@ class VerifyEmail extends StatefulWidget {
 
 class VerifyEmailState extends State<VerifyEmail> {
   List<TextEditingController> otpControllers =
-      List.generate(4, (index) => TextEditingController());
-  List<FocusNode> otpFocusNodes = List.generate(4, (index) => FocusNode());
+      List.generate(6, (index) => TextEditingController());
+  List<FocusNode> otpFocusNodes = List.generate(6, (index) => FocusNode());
+  bool isLoading = false; // Trạng thái loading
 
   @override
   void dispose() {
@@ -48,106 +46,145 @@ class VerifyEmailState extends State<VerifyEmail> {
         elevation: 0,
       ),
       backgroundColor: const Color(0xFFFFFFFF),
-      body: BlocProvider(
-        create: (_) => ForgotPasswordBloc(),
-        child: BlocConsumer<ForgotPasswordBloc, ForgotPasswordState>(
-          listener: (context, state) {
-            if (state is OtpVerifiedState) {
-              // Điều hướng sang trang đổi mật khẩu
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => CreateNewPassword()),
-              );
-            } else if (state is ForgotPasswordError) {
-              // Hiển thị thông báo lỗi
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(state.message)),
-              );
-            }
-          },
-          builder: (context, state) {
-            return SingleChildScrollView(
-              child: Column(
-                children: [
-                  Center(
-                    child: Container(
-                      margin:
-                          const EdgeInsets.only(top: 65, left: 50, right: 50),
-                      child: Image.asset('assets/verifyImg.png'),
-                    ),
+      body: Stack(
+        children: [
+          SingleChildScrollView(
+            child: Column(
+              children: [
+                Center(
+                  child: Container(
+                    margin:
+                        const EdgeInsets.only(top: 65, left: 50, right: 50),
+                    child: Image.asset('assets/verifyImg.png'),
                   ),
-                  Container(
-                    margin: const EdgeInsets.only(top: 30, left: 50, right: 50),
-                    child: Text(
-                      'Please Enter The 4 Digit Code Sent To ${widget.email}',
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.poppins(
-                        textStyle: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                          color: Colors.black,
-                        ),
+                ),
+                Container(
+                  margin: const EdgeInsets.only(top: 30, left: 50, right: 50),
+                  child: Text(
+                    'Please Enter The 6 Digit Code Sent To ${widget.email}',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.poppins(
+                      textStyle: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                        color: Colors.black,
                       ),
                     ),
                   ),
-                  const SizedBox(height: 65),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(4, (index) {
-                      return _buildOtpField(
-                        controller: otpControllers[index],
-                        focusNode: otpFocusNodes[index],
-                        onChanged: () {
-                          if (index < 3) {
-                            FocusScope.of(context)
-                                .requestFocus(otpFocusNodes[index + 1]);
-                          } else {
-                            otpFocusNodes[index].unfocus();
+                ),
+                const SizedBox(height: 65),
+                Wrap(
+                  alignment: WrapAlignment.center,
+                  spacing: 16,
+                  runSpacing: 16,
+                  children: List.generate(6, (index) {
+                    return _buildOtpField(
+                      controller: otpControllers[index],
+                      focusNode: otpFocusNodes[index],
+                      onChanged: () {
+                        if (index < 5) {
+                          FocusScope.of(context)
+                              .requestFocus(otpFocusNodes[index + 1]);
+                        } else {
+                          otpFocusNodes[index].unfocus();
+                        }
+                      },
+                    );
+                  }),
+                ),
+                const SizedBox(height: 40),
+                Text(
+                  'Resend OTP',
+                  style: GoogleFonts.poppins(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: const Color(0xFF2EB67D),
+                    decoration: TextDecoration.underline,
+                    decorationColor: const Color(0xFF2EB67D),
+                  ),
+                ),
+                const SizedBox(height: 50),
+                ElevatedButton(
+                  onPressed: isLoading
+                      ? null // Vô hiệu hóa nút khi đang loading
+                      : () async {
+                          final otpCode = otpControllers.map((c) => c.text).join();
+
+                          if (otpCode.length != 6) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Please enter a 6-digit OTP'),
+                              ),
+                            );
+                            return;
+                          }
+
+                          setState(() {
+                            isLoading = true; // Bật loading
+                          });
+
+                          try {
+                            // Gọi API verifyOTP
+                            final result = await verifyOTP(widget.email, otpCode);
+
+                            // Đợi 3 giây trước khi xử lý kết quả
+                            await Future.delayed(const Duration(seconds: 3));
+
+                            if (result['status'] == 200) {
+                              // Chuyển hướng sang CreateNewPassword
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => CreateNewPassword(email:widget.email),
+                                ),
+                              );
+                            } else {
+                              // Hiển thị thông báo lỗi
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(result['message']),
+                                ),
+                              );
+                            }
+                          } catch (e) {
+                            await Future.delayed(const Duration(seconds: 3));
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Error: $e'),
+                              ),
+                            );
+                          } finally {
+                            setState(() {
+                              isLoading = false; // Tắt loading
+                            });
                           }
                         },
-                      );
-                    }),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF2EB67D),
+                    foregroundColor: Colors.white,
+                    fixedSize: const Size(190, 45),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15),
+                    ),
                   ),
-                  const SizedBox(height: 40),
-                  Text(
-                    'Resend OTP',
+                  child: Text(
+                    "Send",
                     style: GoogleFonts.poppins(
-                      fontSize: 12,
+                      fontSize: 20,
                       fontWeight: FontWeight.w500,
-                      color: const Color(0xFF2EB67D),
-                      decoration: TextDecoration.underline,
-                      decorationColor: const Color(0xFF2EB67D),
                     ),
                   ),
-                  const SizedBox(height: 50),
-                  ElevatedButton(
-                    onPressed: () {
-                      final otpCode = otpControllers.map((c) => c.text).join();
-                      context
-                          .read<ForgotPasswordBloc>()
-                          .add(VerifyOtpEvent(otpCode));
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF2EB67D),
-                      foregroundColor: Colors.white,
-                      fixedSize: const Size(190, 45),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                    ),
-                    child: Text(
-                      "Send",
-                      style: GoogleFonts.poppins(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
-        ),
+                ),
+                const SizedBox(height: 30),
+              ],
+            ),
+          ),
+          if (isLoading)
+            Container(
+              color: Colors.black.withOpacity(0.3),
+              child: const Center(child: CircularProgressIndicator()),
+            ),
+        ],
       ),
     );
   }
@@ -171,8 +208,6 @@ class VerifyEmailState extends State<VerifyEmail> {
           ),
         ],
       ),
-      margin: const EdgeInsets.only(left: 8, right: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 12),
       child: TextField(
         controller: controller,
         focusNode: focusNode,
@@ -186,7 +221,7 @@ class VerifyEmailState extends State<VerifyEmail> {
         maxLength: 1,
         cursorColor: const Color(0xFF2EB67D),
         decoration: const InputDecoration(
-          contentPadding: const EdgeInsets.symmetric(vertical: 20),
+          contentPadding: EdgeInsets.symmetric(vertical: 20),
           border: InputBorder.none,
           counterText: "",
         ),

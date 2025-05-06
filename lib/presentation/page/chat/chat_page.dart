@@ -17,7 +17,7 @@ class ChatPage extends StatelessWidget {
             backgroundColor: Colors.white,
             elevation: 0,
             automaticallyImplyLeading: false, // Xóa nút quay lại
-            expandedHeight: 150, // Tăng chiều cao của SliverAppBar
+            expandedHeight: 120, // Tăng chiều cao của SliverAppBar
             flexibleSpace: FlexibleSpaceBar(
               background: Container(
                 color: Colors.white,

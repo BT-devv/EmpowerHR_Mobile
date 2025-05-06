@@ -1,11 +1,7 @@
-import 'package:empowerhr_moblie/presentation/bloc/forgot_password/forgot_password_bloc.dart';
-import 'package:empowerhr_moblie/presentation/bloc/forgot_password/forgot_password_event.dart';
-import 'package:empowerhr_moblie/presentation/bloc/forgot_password/forgot_password_state.dart';
+import 'package:empowerhr_moblie/domain/usecases/forgot_password.dart';
 import 'package:empowerhr_moblie/presentation/page/auth/verify_email.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
-
 
 class ForgotPassword_page extends StatefulWidget {
   ForgotPassword_page({super.key});
@@ -16,8 +12,10 @@ class ForgotPassword_page extends StatefulWidget {
 
 class _ForgotPassword_pageState extends State<ForgotPassword_page> {
   bool isEmailFocus = false;
+  bool isLoading = false; // Trạng thái loading
   TextEditingController emailController = TextEditingController();
   FocusNode _emailFocus = FocusNode();
+
   @override
   void initState() {
     super.initState();
@@ -28,6 +26,7 @@ class _ForgotPassword_pageState extends State<ForgotPassword_page> {
     });
   }
 
+  @override
   void dispose() {
     emailController.dispose();
     _emailFocus.dispose();
@@ -51,97 +50,124 @@ class _ForgotPassword_pageState extends State<ForgotPassword_page> {
         elevation: 0,
       ),
       backgroundColor: const Color(0xFFFFFFFF),
-      body: BlocProvider(
-        create: (_) => ForgotPasswordBloc(),
-        child: BlocConsumer<ForgotPasswordBloc, ForgotPasswordState>(
-          listener: (context, state) {
-            if (state is EmailSubmittedState) {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => VerifyEmail(
-                          email: emailController.text,
-                        )),
-              );
-            }
-          },
-          builder: (context, state) {
-            if (state is ForgotPasswordLoading) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            return SingleChildScrollView(
-              child: Column(
-                children: [
-                  Center(
-                    child: Container(
-                      margin:
-                          const EdgeInsets.only(top: 65, left: 50, right: 50),
-                      child: Image.asset('assets/forgotPasswordImg.png'),
-                    ),
+      body: Stack(
+        children: [
+          SingleChildScrollView(
+            child: Column(
+              children: [
+                Center(
+                  child: Container(
+                    margin:
+                        const EdgeInsets.only(top: 65, left: 50, right: 50),
+                    child: Image.asset('assets/forgotPasswordImg.png'),
                   ),
-                  Container(
-                    margin: const EdgeInsets.only(top: 30, left: 50, right: 50),
-                    child: Text(
-                      'Please Enter Your Email Address To Recieve A Verification Code.',
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.poppins(
-                        textStyle: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                          color: Colors.black,
-                        ),
+                ),
+                Container(
+                  margin: const EdgeInsets.only(top: 30, left: 50, right: 50),
+                  child: Text(
+                    'Please Enter Your Email Address To Recieve A Verification Code.',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.poppins(
+                      textStyle: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                        color: Colors.black,
                       ),
                     ),
                   ),
-                  const SizedBox(
-                    height: 85,
-                  ),
-                  _buildTextField(
-                    label: "Email Address",
-                    controller: emailController,
-                    focusNode: _emailFocus,
-                    hintText: "Enter your Email here",
-                  ),
-                  const SizedBox(
-                    height: 115,
-                  ),
-                  ElevatedButton(
-                    onPressed: () {
-                      final email = emailController.text.trim();
+                ),
+                const SizedBox(
+                  height: 85,
+                ),
+                _buildTextField(
+                  label: "Email Address",
+                  controller: emailController,
+                  focusNode: _emailFocus,
+                  hintText: "Enter your Email here",
+                ),
+                const SizedBox(
+                  height: 115,
+                ),
+                ElevatedButton(
+                  onPressed: isLoading
+                      ? null 
+                      : () async {
+                          final email = emailController.text.trim();
 
-                      if (email.isNotEmpty) {
-                        context
-                            .read<ForgotPasswordBloc>()
-                            .add(SubmitEmailEvent(email));
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                              content:
-                                  Text('Please enter a valid email address')),
-                        );
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF2EB67D),
-                      foregroundColor: Colors.white,
-                      fixedSize: const Size(190, 45),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                    ),
-                    child: Text(
-                      "Send",
-                      style: GoogleFonts.poppins(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w500,
-                      ),
+                          if (email.isNotEmpty) {
+                            setState(() {
+                              isLoading = true; 
+                            });
+
+                            try {
+                              int? status = await forgotPassword(email);
+
+                              await Future.delayed(const Duration(seconds: 1));
+
+                              if (status == 200) {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => VerifyEmail(
+                                      email: email,
+                                    ),
+                                  ),
+                                );
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      'Failed to send OTP. Status: $status',
+                                    ),
+                                  ),
+                                );
+                              }
+                            } catch (e) {
+                              await Future.delayed(const Duration(seconds: 3));
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Error: $e'),
+                                ),
+                              );
+                            } finally {
+                              setState(() {
+                                isLoading = false; // Tắt loading
+                              });
+                            }
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content:
+                                    Text('Please enter a valid email address'),
+                              ),
+                            );
+                          }
+                        },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF2EB67D),
+                    foregroundColor: Colors.white,
+                    fixedSize: const Size(190, 45),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15),
                     ),
                   ),
-                ],
-              ),
-            );
-          },
-        ),
+                  child: Text(
+                    "Send",
+                    style: GoogleFonts.poppins(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (isLoading)
+            Container(
+              color: Colors.black.withOpacity(0.3),
+              child: const Center(child: CircularProgressIndicator()),
+            ),
+        ],
       ),
     );
   }

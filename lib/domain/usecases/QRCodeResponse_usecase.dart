@@ -43,7 +43,7 @@ Future<QRCodeResponse> getQRCode() async {
       'Content-Type': 'application/json',
     };
 
-    final endpoint = 'user/qrcode/$idUser'; // Endpoint với idUser
+    final endpoint = 'user/qrcode/$idUser';
 
     // Gọi phương thức getReq từ ApiService
     final response = await ApiService().getReq(endpoint, headers: headers);

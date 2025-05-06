@@ -10,13 +10,11 @@ Future<int?> login(String email, String password) async {
   };
 
   try {
-    // Gọi phương thức postReq để gửi yêu cầu đăng nhập
     final http.Response response =
         await ApiService().postReq(credentials, 'user/login');
     final Map<String, dynamic> data = jsonDecode(response.body);
 
     if (response.statusCode == 200) {
-      // Lưu token vào SharedPreferences
       SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setString('token', data['token']);
       await prefs.setString('idUser', data['userId']);

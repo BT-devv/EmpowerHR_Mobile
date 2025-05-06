@@ -20,17 +20,14 @@ Future<UserModel> getUserById() async {
 
     final endpoint = 'user/$idUser';
 
-    // Gọi API với timeout
     final response = await ApiService()
         .getReq(endpoint, headers: headers)
         .timeout(const Duration(seconds: 10), onTimeout: () {
       throw Exception('Request timed out after 10 seconds');
     });
 
-    // Parse response một lần
     final Map<String, dynamic> data = jsonDecode(response.body);
 
-    // Kiểm tra status code
     if (response.statusCode == 200) {
       return UserModel.fromJson(data);
     } else {
@@ -39,6 +36,6 @@ Future<UserModel> getUserById() async {
     }
   } catch (error) {
     print('Error fetching user by ID: $error');
-    rethrow; // Cho phép người gọi xử lý lỗi
+    rethrow; 
   }
 }
