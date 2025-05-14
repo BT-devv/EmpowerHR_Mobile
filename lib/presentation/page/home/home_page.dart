@@ -1,15 +1,17 @@
 import 'dart:convert';
 import 'package:empowerhr_moblie/data/models/user_model.dart';
 import 'package:empowerhr_moblie/data/service/api_service.dart';
+import 'package:empowerhr_moblie/data/service/socket_service.dart';
 import 'package:empowerhr_moblie/domain/usecases/QRCodeResponse_usecase.dart';
+import 'package:empowerhr_moblie/domain/usecases/get_file_byid.dart';
 import 'package:empowerhr_moblie/domain/usecases/get_user_by_id_usecase.dart';
+import 'package:empowerhr_moblie/presentation/page/home/noti_icon.dart';
 import 'package:empowerhr_moblie/presentation/page/home/notification_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:math';
 import 'package:intl/intl.dart';
-import 'dart:convert'; // Để decode base64
 import 'package:shared_preferences/shared_preferences.dart';
 
 class HomePage extends StatefulWidget {
@@ -26,6 +28,22 @@ class _HomePageState extends State<HomePage> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _connectWebSocket(); // Kết nối WebSocket khi vào HomePage
+  }
+
+  Future<void> _connectWebSocket() async {
+    final prefs = await SharedPreferences.getInstance();
+    final employeeID = prefs.getString('employeeID');
+    if (employeeID != null) {
+      await NotificationService().init(employeeID);
+    } else {
+      print('EmployeeID not found in SharedPreferences');
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
       statusBarColor: Color(0xFF2EB67D),
@@ -37,13 +55,9 @@ class _HomePageState extends State<HomePage> {
         child: Column(
           children: [
             buildHeader(context),
-            SizedBox(
-              height: 10,
-            ),
+            SizedBox(height: 10),
             buildDateSection(context),
-            SizedBox(
-              height: 10,
-            ),
+            SizedBox(height: 10),
             buildWeekDays(context),
             buildCheckInSection(context),
             buildEventSection(context),
@@ -58,6 +72,23 @@ class _HomePageState extends State<HomePage> {
     final screenHeight = MediaQuery.of(context).size.height;
     DateTime now = DateTime.now();
 
+    Future<Uint8List> getAvatarFuture() async {
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        final photoID = prefs.getString('photoID') ?? '';
+
+        if (photoID.isEmpty) {
+          return Uint8List(0);
+        }
+
+        final avatarData = await getFileById(photoID);
+        return avatarData;
+      } catch (e) {
+        print('Error fetching avatar in buildHeader: $e');
+        return Uint8List(0);
+      }
+    }
+
     return FutureBuilder<UserModel>(
       future: getUserById(),
       builder: (context, snapshot) {
@@ -68,9 +99,12 @@ class _HomePageState extends State<HomePage> {
         return Container(
           width: double.infinity,
           height: screenHeight * 0.17,
-          decoration: BoxDecoration(
-            color: const Color(0xFF2EB67D),
-            borderRadius: BorderRadius.circular(10),
+          decoration: const BoxDecoration(
+            color: Color(0xFF2EB67D),
+            borderRadius: BorderRadius.only(
+              bottomLeft: Radius.circular(10),
+              bottomRight: Radius.circular(10),
+            ),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -85,6 +119,40 @@ class _HomePageState extends State<HomePage> {
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(50),
+                      border: Border.all(color: Colors.grey, width: 1),
+                    ),
+                    child: FutureBuilder<Uint8List>(
+                      future: getAvatarFuture(),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const Center(child: CircularProgressIndicator());
+                        }
+                        if (snapshot.hasError ||
+                            !snapshot.hasData ||
+                            snapshot.data!.isEmpty) {
+                          print(
+                              'Avatar loading failed, data empty, or error: ${snapshot.error}');
+                          return  Image.asset('assets/default_avatar.png');
+                        }
+                        try {
+                          print(
+                              'Displaying image with length: ${snapshot.data!.length} bytes');
+                          return ClipOval(
+                            child: Image.memory(
+                              snapshot.data!,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                print('Image.memory error: $error');
+                                return const Icon(Icons.error, color: Colors.red);
+                              },
+                            ),
+                          );
+                        } catch (e) {
+                          print('Exception during image display: $e');
+                          return const Icon(Icons.error, color: Colors.red);
+                        }
+                      },
                     ),
                   ),
                   Container(
@@ -128,14 +196,13 @@ class _HomePageState extends State<HomePage> {
                     width: screenWidth * 0.11,
                     margin: EdgeInsets.only(
                         left: screenWidth * 0.04, top: screenHeight * 0.02),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF80C0A5),
+                    decoration:  BoxDecoration(
+                      color: Color(0xFF80C0A5),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: IconButton(
                       onPressed: () {
-                        final randomIndex =
-                            Random().nextInt(qrBackgrounds.length);
+                        final randomIndex = Random().nextInt(qrBackgrounds.length);
                         showGeneralDialog(
                           context: context,
                           barrierDismissible: true,
@@ -151,28 +218,7 @@ class _HomePageState extends State<HomePage> {
                       icon: Image.asset('assets/qr-code.png'),
                     ),
                   ),
-                  Container(
-                    height: screenWidth * 0.11,
-                    width: screenWidth * 0.11,
-                    margin: EdgeInsets.only(
-                        left: screenWidth * 0.02,
-                        top: screenHeight * 0.02,
-                        right: screenWidth * 0.035),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF80C0A5),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: IconButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => const NotificationPage()),
-                        );
-                      },
-                      icon: Image.asset('assets/thongbao.png'),
-                    ),
-                  ),
+                  const NotificationIcon(), // Thay thế Container cũ bằng NotificationIcon
                 ],
               ),
             ],

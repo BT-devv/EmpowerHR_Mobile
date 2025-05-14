@@ -24,6 +24,8 @@ dependencies:
   image_picker: ^1.1.2
   permission_handler: ^11.3.1
   web_socket_channel: ^3.0.1
+  jwt_decoder: ^2.0.1
+  archive: ^3.6.1
   
 
 dev_dependencies:
@@ -100,4 +102,5 @@ flutter:
     - assets/header_calender/header_11.png
     - assets/header_calender/header_12.png
     - assets/background_notification.png
+    - assets/default_avatar.png
 

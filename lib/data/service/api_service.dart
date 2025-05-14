@@ -7,6 +7,7 @@ class ApiService {
   static String createApiUrl(String endpoint) {
     final port = dotenv.env['PORT'] ?? '3000'; // Lấy cổng từ .env
     final baseUrl = 'http://192.168.100.68:$port/api/'; // URL
+    //final baseUrl = 'http://10.7.91.254:$port/api/';
     print('URL: $baseUrl$endpoint');
     return '$baseUrl$endpoint';
   }

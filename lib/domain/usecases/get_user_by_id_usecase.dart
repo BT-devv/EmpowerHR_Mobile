@@ -27,9 +27,21 @@ Future<UserModel> getUserById() async {
     });
 
     final Map<String, dynamic> data = jsonDecode(response.body);
-    print("usernamww  w :${data}");
-    await prefs.setString('firstName', data['firstName']);
-    await prefs.setString('lastName', data['lastName']);
+    print("User data: $data");
+
+    // Lưu các trường thông tin nếu tồn tại
+    if (data.containsKey('firstName') && data['firstName'] != null) {
+      await prefs.setString('firstName', data['firstName']);
+    }
+
+    if (data.containsKey('lastName') && data['lastName'] != null) {
+      await prefs.setString('lastName', data['lastName']);
+    }
+
+    if (data.containsKey('photoID') && data['photoID'] != null) {
+      await prefs.setString('photoID', data['photoID']);
+    }
+
     if (response.statusCode == 200) {
       return UserModel.fromJson(data);
     } else {
