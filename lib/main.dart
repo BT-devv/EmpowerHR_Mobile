@@ -1,4 +1,5 @@
 import 'package:empowerhr_moblie/presentation/page/get_start.dart';
+import 'package:empowerhr_moblie/presentation/page/notification_listener.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
@@ -17,7 +18,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return const MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: GetStartPage(),
+      home: NotificationListen(
+          child: GetStartPage()), // Bọc bằng NotificationListener
     );
   }
 }

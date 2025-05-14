@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:empowerhr_moblie/data/models/user_model.dart';
 import 'package:empowerhr_moblie/data/service/api_service.dart';
 import 'package:empowerhr_moblie/presentation/bloc/user_info/user_bloc.dart';
@@ -5,7 +7,7 @@ import 'package:empowerhr_moblie/presentation/bloc/user_info/user_event.dart';
 import 'package:empowerhr_moblie/presentation/bloc/user_info/user_state.dart';
 import 'package:empowerhr_moblie/presentation/page/account/Change_password_page.dart';
 import 'package:empowerhr_moblie/presentation/page/account/change_theme_Page.dart';
-import 'package:empowerhr_moblie/presentation/page/account/employee_rights_page.dart';
+import 'package:empowerhr_moblie/presentation/page/account/employee_rights.dart';
 import 'package:empowerhr_moblie/presentation/page/account/manage_account_status_page.dart';
 import 'package:empowerhr_moblie/presentation/page/account/manage_notification_page.dart';
 import 'package:empowerhr_moblie/presentation/page/account/personal_information_page.dart';
@@ -27,17 +29,50 @@ class AccountPage extends StatefulWidget {
 
 class _AccountPageState extends State<AccountPage> {
   bool isLoading = false;
+  File? _selectedImage; // Biến để lưu ảnh đã chọn
   final Map<String, Widget> _pageMapping = {
     "Personal Information": PersonalInformationPage(),
     "Change Password": const ChangePasswordPage(),
     "Manage Account Status": const ManageAccountStatusPage(),
     "Manage Notification": const ManageNotificationPage(),
     "Change theme": const ChangeThemePage(),
-    "Two-factor authentication": const TwoFactorAuthPage(),
     "Terms & Condition": const TermsAndConditionPage(),
     "Privacy Policy": const PrivacyPolicyPage(),
     "Employee's rights": const EmployeeRightsPage(),
   };
+
+  Future<void> _showImageSourceOptions(BuildContext context) async {
+    // Placeholder cho logic chọn ảnh (cần tích hợp image_picker)
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Select Image Source'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.camera),
+                title: const Text('Camera'),
+                onTap: () {
+                  // Thêm logic lấy ảnh từ camera
+                  Navigator.pop(context);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo),
+                title: const Text('Gallery'),
+                onTap: () {
+                  // Thêm logic lấy ảnh từ gallery
+                  Navigator.pop(context);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -62,275 +97,287 @@ class _AccountPageState extends State<AccountPage> {
                 children: [
                   CustomScrollView(
                     slivers: [
-                      // SliverAppBar cho header
-                      SliverAppBar(
-                        backgroundColor: Colors.white,
-                        elevation: 0,
-                        automaticallyImplyLeading: false,
-                        expandedHeight: 150,
-                        flexibleSpace: FlexibleSpaceBar(
-                          background: Container(
-                            color: Colors.white,
-                            child: Image.asset(
-                              'assets/background_account.png',
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                        ),
-                      ),
                       // Phần còn lại của nội dung
                       SliverList(
-                        delegate: SliverChildListDelegate([
-                          // Avatar
-                          Center(
-                            child: Container(
-                              margin: EdgeInsets.only(top: 150 - (200 * 2 / 3)),
-                              height: 200,
-                              width: 200,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Colors.white,
-                                border: Border.all(
-                                  color: Colors.black,
-                                  width: 2,
-                                ),
-                                image: const DecorationImage(
-                                  image: AssetImage('assets/QR_code.png'),
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                            ),
-                          ),
-                          SizedBox(height: 200 * 1 / 3),
-                          Text(
-                            "${user.firstName} ${user.lastName}",
-                            textAlign: TextAlign.center,
-                            style: GoogleFonts.baloo2(
-                              textStyle: const TextStyle(
-                                fontSize: 40,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black,
-                              ),
-                            ),
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                "ID:",
-                                style: GoogleFonts.baloo2(
-                                  textStyle: const TextStyle(
-                                      fontSize: 20,
-                                      color: Colors.black,
-                                      fontWeight: FontWeight.bold),
-                                ),
-                              ),
-                              Text(
-                                "${user.employeeID}",
-                                style: GoogleFonts.baloo2(
-                                  textStyle: const TextStyle(
-                                      fontSize: 20,
-                                      color: Color(0xFF2EB67D),
-                                      fontWeight: FontWeight.bold),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 20),
-                          Padding(
-                            padding: EdgeInsets.symmetric(
-                                horizontal: screenWidth * 0.025),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                        delegate: SliverChildListDelegate(
+                          [
+                            // Stack chứa avatar
+                            Stack(
+                              clipBehavior: Clip.none,
                               children: [
-                                Padding(
-                                  padding: const EdgeInsets.only(bottom: 8),
-                                  child: Text(
-                                    "ACCOUNT SETTING",
-                                    style: GoogleFonts.baloo2(
-                                      textStyle: const TextStyle(
-                                        fontSize: 16,
-                                        color: Color(0xFF565656),
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                                Container(
+                                  height: 223,
+                                  width: double.infinity,
+                                  decoration: const BoxDecoration(
+                                    image: DecorationImage(
+                                      image: AssetImage(
+                                          'assets/background_account.png'),
+                                      fit: BoxFit.cover,
                                     ),
                                   ),
-                                ),
-                                _buildMenuItem(
-                                  "Personal Information",
-                                  Image.asset(
-                                    'assets/icons/user-circle.png',
-                                    height: 20,
-                                    width: 20,
-                                  ),
-                                  onTap: () =>
-                                      _navigateToPersonalInfo(context, user),
-                                ),
-                                const Divider(),
-                                _buildMenuItem(
-                                  "Change Password",
-                                  Image.asset(
-                                    'assets/icons/lock-closed.png',
-                                    height: 20,
-                                    width: 20,
-                                  ),
-                                  onTap: () => _navigateToPage(
-                                      context, "Change Password"),
-                                ),
-                                const Divider(),
-                                _buildMenuItem(
-                                  "Manage Account Status",
-                                  Image.asset(
-                                    'assets/icons/check-badge.png',
-                                    height: 20,
-                                    width: 20,
-                                  ),
-                                  onTap: () => _navigateToPage(
-                                      context, "Manage Account Status"),
-                                ),
-                                const Divider(),
-                                _buildMenuItem(
-                                  "Manage Notification",
-                                  Image.asset(
-                                    'assets/icons/bell.png',
-                                    height: 20,
-                                    width: 20,
-                                  ),
-                                  onTap: () => _navigateToPage(
-                                      context, "Manage Notification"),
-                                ),
-                                Padding(
-                                  padding:
-                                      const EdgeInsets.only(top: 10, bottom: 8),
-                                  child: Text(
-                                    "SYSTEM CONFIGURATIONS",
-                                    style: GoogleFonts.baloo2(
-                                      textStyle: const TextStyle(
-                                        fontSize: 16,
-                                        color: Color(0xFF565656),
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                _buildMenuItem(
-                                  "Change theme",
-                                  Image.asset(
-                                    'assets/icons/moon.png',
-                                    height: 20,
-                                    width: 20,
-                                  ),
-                                  comingSoon: true,
-                                  onTap: () =>
-                                      _navigateToPage(context, "Change theme"),
-                                ),
-                                const Divider(),
-                                _buildMenuItem(
-                                  "Two-factor authentication",
-                                  Image.asset(
-                                    'assets/icons/finger-print.png',
-                                    height: 20,
-                                    width: 20,
-                                  ),
-                                  comingSoon: true,
-                                  onTap: () => _navigateToPage(
-                                      context, "Two-factor authentication"),
-                                ),
-                                Padding(
-                                  padding:
-                                      const EdgeInsets.only(top: 10, bottom: 8),
-                                  child: Text(
-                                    "Company’s License",
-                                    style: GoogleFonts.baloo2(
-                                      textStyle: const TextStyle(
-                                        fontSize: 16,
-                                        color: Color(0xFF565656),
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                _buildMenuItem(
-                                  "Terms & Condition",
-                                  Image.asset(
-                                    'assets/icons/building-library.png',
-                                    height: 20,
-                                    width: 20,
-                                  ),
-                                  onTap: () => _navigateToPage(
-                                      context, "Terms & Condition"),
-                                ),
-                                const Divider(),
-                                _buildMenuItem(
-                                  "Privacy Policy",
-                                  Image.asset(
-                                    'assets/icons/hand-raised.png',
-                                    height: 20,
-                                    width: 20,
-                                  ),
-                                  onTap: () =>
-                                      _navigateToPage(context, "Privacy Policy"),
-                                ),
-                                const Divider(),
-                                _buildMenuItem(
-                                  "Employee's rights",
-                                  Image.asset(
-                                    'assets/icons/shield-check.png',
-                                    height: 20,
-                                    width: 20,
-                                  ),
-                                  onTap: () => _navigateToPage(
-                                      context, "Employee's rights"),
                                 ),
                                 Container(
-                                  margin: const EdgeInsets.all(20),
-                                  child: ElevatedButton(
-                                    onPressed: () async {
-                                      setState(() {
-                                        isLoading = true;
-                                      });
-                                      try {
-                                        await logout(context);
-                                      } catch (error) {
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          SnackBar(
-                                              content:
-                                                  Text('Logout failed: $error')),
-                                        );
-                                      }
-                                      setState(() {
-                                        isLoading = false;
-                                      });
-                                    },
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: const Color(0xFFE7E7E7),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(8),
+                                  margin: EdgeInsets.only(
+                                    top: 223 - (200 / 3),
+                                    left: (screenWidth - 200) / 2,
+                                  ),
+                                  child: Stack(
+                                    children: [
+                                      // Vòng tròn lớn (avatar)
+                                      Container(
+                                        height: 200,
+                                        width: 200,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: Colors.white,
+                                          border: Border.all(
+                                            color: Colors.black,
+                                            width: 2,
+                                          ),
+                                          image: DecorationImage(
+                                            image: _selectedImage != null
+                                                ? FileImage(_selectedImage!)
+                                                : user.avatar != null
+                                                    ? NetworkImage(user.avatar!)
+                                                    : const AssetImage(
+                                                            'assets/QR_code.png')
+                                                        as ImageProvider,
+                                            fit: BoxFit.cover,
+                                          ),
+                                        ),
                                       ),
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 30, vertical: 10),
-                                      minimumSize:
-                                          const Size(double.infinity, 50),
-                                    ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Text(
+                              "${user.firstName} ${user.lastName}",
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.baloo2(
+                                textStyle: const TextStyle(
+                                  fontSize: 40,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black,
+                                ),
+                              ),
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  "ID:",
+                                  style: GoogleFonts.baloo2(
+                                    textStyle: const TextStyle(
+                                        fontSize: 20,
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                                Text(
+                                  "${user.employeeID}",
+                                  style: GoogleFonts.baloo2(
+                                    textStyle: const TextStyle(
+                                        fontSize: 20,
+                                        color: Color(0xFF2EB67D),
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 20),
+                            Padding(
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: screenWidth * 0.025),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.only(bottom: 8),
                                     child: Text(
-                                      "LOG OUT",
+                                      "ACCOUNT SETTING",
                                       style: GoogleFonts.baloo2(
                                         textStyle: const TextStyle(
                                           fontSize: 16,
-                                          color: Colors.red,
+                                          color: Color(0xFF565656),
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
                                     ),
                                   ),
-                                ),
-                              ],
+                                  _buildMenuItem(
+                                    "Personal Information",
+                                    Image.asset(
+                                      'assets/icons/user-circle.png',
+                                      height: 20,
+                                      width: 20,
+                                    ),
+                                    onTap: () =>
+                                        _navigateToPersonalInfo(context, user),
+                                  ),
+                                  const Divider(),
+                                  _buildMenuItem(
+                                    "Change Password",
+                                    Image.asset(
+                                      'assets/icons/lock-closed.png',
+                                      height: 20,
+                                      width: 20,
+                                    ),
+                                    onTap: () => _navigateToPage(
+                                        context, "Change Password"),
+                                  ),
+                                  const Divider(),
+                                  _buildMenuItem(
+                                    "Manage Account Status",
+                                    Image.asset(
+                                      'assets/icons/check-badge.png',
+                                      height: 20,
+                                      width: 20,
+                                    ),
+                                    onTap: () => _navigateToPage(
+                                        context, "Manage Account Status"),
+                                  ),
+                                  const Divider(),
+                                  _buildMenuItem(
+                                    "Manage Notification",
+                                    Image.asset(
+                                      'assets/icons/bell.png',
+                                      height: 20,
+                                      width: 20,
+                                    ),
+                                    onTap: () => _navigateToPage(
+                                        context, "Manage Notification"),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.only(
+                                        top: 10, bottom: 8),
+                                    child: Text(
+                                      "SYSTEM CONFIGURATIONS",
+                                      style: GoogleFonts.baloo2(
+                                        textStyle: const TextStyle(
+                                          fontSize: 16,
+                                          color: Color(0xFF565656),
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  _buildMenuItem(
+                                    "Change theme",
+                                    Image.asset(
+                                      'assets/icons/moon.png',
+                                      height: 20,
+                                      width: 20,
+                                    ),
+                                    comingSoon: true,
+                                    onTap: () => _navigateToPage(
+                                        context, "Change theme"),
+                                  ),
+                                  const Divider(),
+                                  
+                                  Padding(
+                                    padding: const EdgeInsets.only(
+                                        top: 10, bottom: 8),
+                                    child: Text(
+                                      "Company’s License",
+                                      style: GoogleFonts.baloo2(
+                                        textStyle: const TextStyle(
+                                          fontSize: 16,
+                                          color: Color(0xFF565656),
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  _buildMenuItem(
+                                    "Terms & Condition",
+                                    Image.asset(
+                                      'assets/icons/building-library.png',
+                                      height: 20,
+                                      width: 20,
+                                    ),
+                                    onTap: () => _navigateToPage(
+                                        context, "Terms & Condition"),
+                                  ),
+                                  const Divider(),
+                                  _buildMenuItem(
+                                    "Privacy Policy",
+                                    Image.asset(
+                                      'assets/icons/hand-raised.png',
+                                      height: 20,
+                                      width: 20,
+                                    ),
+                                    onTap: () => _navigateToPage(
+                                        context, "Privacy Policy"),
+                                  ),
+                                  const Divider(),
+                                  _buildMenuItem(
+                                    "Employee's rights",
+                                    Image.asset(
+                                      'assets/icons/shield-check.png',
+                                      height: 20,
+                                      width: 20,
+                                    ),
+                                    onTap: () => Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            const EmployeeRightsPage(),
+                                      ),
+                                    ),
+                                  ),
+                                  Container(
+                                    margin: const EdgeInsets.all(20),
+                                    child: ElevatedButton(
+                                      onPressed: () async {
+                                        setState(() {
+                                          isLoading = true;
+                                        });
+                                        try {
+                                          await logout(context);
+                                        } catch (error) {
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            SnackBar(
+                                                content: Text(
+                                                    'Logout failed: $error')),
+                                          );
+                                        }
+                                        setState(() {
+                                          isLoading = false;
+                                        });
+                                      },
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor:
+                                            const Color(0xFFE7E7E7),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(8),
+                                        ),
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 30, vertical: 10),
+                                        minimumSize:
+                                            const Size(double.infinity, 50),
+                                      ),
+                                      child: Text(
+                                        "LOG OUT",
+                                        style: GoogleFonts.baloo2(
+                                          textStyle: const TextStyle(
+                                            fontSize: 16,
+                                            color: Colors.red,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                  )],
+                          ],
+                        ),
+                      )
+                    ],
                   ),
                   if (isLoading)
                     Container(
@@ -411,10 +458,7 @@ class _AccountPageState extends State<AccountPage> {
                   ShaderMask(
                     shaderCallback: (Rect bounds) {
                       return const LinearGradient(
-                        colors: [
-                          Colors.red,
-                          Colors.orange,
-                        ],
+                        colors: [Colors.red, Colors.orange],
                         begin: Alignment.centerLeft,
                         end: Alignment.centerRight,
                       ).createShader(bounds);
