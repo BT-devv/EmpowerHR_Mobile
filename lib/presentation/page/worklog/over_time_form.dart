@@ -22,6 +22,8 @@ class _OverTimeFormState extends State<OverTimeForm> {
   final TextEditingController _reasonController = TextEditingController();
 
   void _showSnackBar(String message, {bool isSuccess = true}) {
+    final screenHeight = MediaQuery.of(context).size.height;
+    final bottomMargin = (screenHeight - 100) / 2;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -44,7 +46,8 @@ class _OverTimeFormState extends State<OverTimeForm> {
         ),
         backgroundColor: Colors.white,
         behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.only(top: 5, left: 5, right: 5, bottom: 20),
+        margin:
+            EdgeInsets.only(top: 5, left: 5, right: 5, bottom: bottomMargin),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
           side: BorderSide(

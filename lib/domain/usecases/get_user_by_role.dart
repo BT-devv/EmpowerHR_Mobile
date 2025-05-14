@@ -5,7 +5,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 Future<List<UserModel>> getUsersByRole(String role) async {
   try {
-    // Lấy token từ SharedPreferences
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString('token');
 
@@ -31,7 +30,6 @@ Future<List<UserModel>> getUsersByRole(String role) async {
     if (response.statusCode == 200) {
       List<UserModel> users = data.map((json) => UserModel.fromJson(json)).toList();
 
-      // Lọc người dùng theo role
       List<UserModel> filteredUsers = users.where((user) => user.role == role).toList();
 
       return filteredUsers;

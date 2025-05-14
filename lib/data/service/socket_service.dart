@@ -33,9 +33,8 @@ class NotificationService {
     final stored = prefs.getString('notifications');
     if (stored != null) {
       final List<dynamic> jsonList = jsonDecode(stored);
-      _notifications = jsonList
-          .map((json) => NotificationModel.fromJson(json))
-          .toList();
+      _notifications =
+          jsonList.map((json) => NotificationModel.fromJson(json)).toList();
       _notificationController.add(_notifications);
       print('Loaded notifications: ${_notifications.length}');
     } else {
@@ -55,8 +54,10 @@ class NotificationService {
     try {
       print('Attempting to connect to WebSocket at: $wsUrl');
       _channel = WebSocketChannel.connect(Uri.parse(wsUrl));
-      _channel!.sink.add(jsonEncode({'type': 'register', 'employeeID': employeeID}));
-      print('Sent register message: {"type": "register", "employeeID": "$employeeID"}');
+      _channel!.sink
+          .add(jsonEncode({'type': 'register', 'employeeID': employeeID}));
+      print(
+          'Sent register message: {"type": "register", "employeeID": "$employeeID"}');
 
       // Bắt đầu gửi ping định kỳ
       _startPing();
@@ -138,14 +139,16 @@ class NotificationService {
     });
   }
 
-  void sendNotification(String type, String message, Map<String, dynamic>? data) {
+  void sendNotification(
+      String type, String message, Map<String, dynamic>? data) {
     if (_channel != null && _channel!.sink != null) {
       _channel!.sink.add(jsonEncode({
         'type': type,
         'message': message,
         'data': data,
       }));
-      print('Sent notification: {"type": "$type", "message": "$message", "data": $data}');
+      print(
+          'Sent notification: {"type": "$type", "message": "$message", "data": $data}');
     } else {
       print('Cannot send notification: WebSocket channel is null or closed');
       if (_currentEmployeeID != null && !_isLoggedOut) {
@@ -155,16 +158,18 @@ class NotificationService {
   }
 
   void markAllAsRead() {
-    _notifications = _notifications.map((n) => NotificationModel(
-      id: n.id,
-      category: n.category,
-      description: n.description,
-      hour: n.hour,
-      date: n.date,
-      color: n.color,
-      read: true,
-      data: n.data,
-    )).toList();
+    _notifications = _notifications
+        .map((n) => NotificationModel(
+              id: n.id,
+              category: n.category,
+              description: n.description,
+              hour: n.hour,
+              date: n.date,
+              color: n.color,
+              read: true,
+              data: n.data,
+            ))
+        .toList();
     _saveNotifications();
   }
 
@@ -186,16 +191,33 @@ class NotificationService {
 
   Color _getColor(String category) {
     switch (category) {
-      case 'Meeting': return Colors.red;
-      case 'Performance report': return Colors.green;
-      case 'Password change': return Colors.orange;
-      case 'Absence request': return Colors.purple;
-      case 'Event notification': return Colors.cyan;
-      case 'Absence': return Colors.blue;
-      case 'Overtime': return Colors.teal;
-      case 'payroll': return Colors.yellow;
-      default: return Colors.grey;
+      case 'Meeting':
+        return Colors.red;
+      case 'Performance report':
+        return Colors.green;
+      case 'Password change':
+        return Colors.orange;
+      case 'Absence request':
+        return Colors.purple;
+      case 'Event notification':
+        return Colors.cyan;
+      case 'Absence':
+        return Colors.blue;
+      case 'Overtime':
+        return Colors.teal;
+      case 'payroll':
+        return Colors.yellow;
+      default:
+        return Colors.grey;
     }
+  }
+
+  Future<void> clearNotifications() async {
+    _notifications.clear();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('notifications');
+    _notificationController.add(_notifications); // Phát stream rỗng
+    print('All notifications cleared');
   }
 
   void disconnectOnLogout() {

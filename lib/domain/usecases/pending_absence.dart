@@ -3,24 +3,18 @@ import 'package:empowerhr_moblie/data/service/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 
-Future<Map<String, dynamic>> getAbsencesHistory() async {
+Future<Map<String, dynamic>> getPendingAbsences() async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
   String? token = prefs.getString('token');
-  String? employeeID =
-      prefs.getString('employeeID'); 
+  String? employeeID = prefs.getString('employeeID');
+
   if (token == null) {
     print('Error: Token not found in SharedPreferences');
-    return {
-      'success': false,
-      'message': 'Token not found',
-    };
+    return {'success': false, 'message': 'Token not found'};
   }
   if (employeeID == null) {
     print('Error: Employee ID not found in SharedPreferences');
-    return {
-      'success': false,
-      'message': 'Employee ID not found in SharedPreferences',
-    };
+    return {'success': false, 'message': 'Employee ID not found in SharedPreferences'};
   }
 
   print('Current employeeID from SharedPreferences: $employeeID');
@@ -30,7 +24,7 @@ Future<Map<String, dynamic>> getAbsencesHistory() async {
       'Authorization': 'Bearer $token',
       'Content-Type': 'application/json',
     };
-    const endpoint = 'absence/history';
+    const endpoint = 'absence/pending'; 
 
     final response = await ApiService()
         .getReq(endpoint, headers: headers)
@@ -45,29 +39,30 @@ Future<Map<String, dynamic>> getAbsencesHistory() async {
       List<dynamic> absences = responseBody['absences'] ?? [];
       print('Total absences before filtering: ${absences.length}');
 
+      absences.forEach((absence) {
+        print('EmployeeID in absence: ${absence['employeeID']}');
+      });
+
       List<dynamic> filteredAbsences = absences
           .where((absence) => absence['employeeID'] == employeeID)
           .toList();
 
-      print('Filtered absences for employeeID $employeeID: $filteredAbsences');
+      print('Filtered pending absences for employeeID $employeeID: $filteredAbsences');
 
       return {
         'success': true,
-        'message': responseBody['message'] ??
-            'Absences history retrieved successfully',
+        'message': responseBody['message'] ?? 'Pending absences retrieved successfully',
         'absences': filteredAbsences,
       };
     } else {
-      print(
-          'API Error: Status code ${response.statusCode}, Response: $responseBody');
+      print('API Error: Status code ${response.statusCode}, Response: $responseBody');
       return {
         'success': false,
-        'message':
-            responseBody['message'] ?? 'Failed to retrieve absences history',
+        'message': responseBody['message'] ?? 'Failed to retrieve pending absences',
       };
     }
   } catch (error) {
-    print('Error fetching absences history: $error');
+    print('Error fetching pending absences: $error');
     return {
       'success': false,
       'message': 'An error occurred: $error',

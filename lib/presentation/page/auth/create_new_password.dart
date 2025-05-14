@@ -1,11 +1,10 @@
 import 'package:empowerhr_moblie/domain/usecases/create_new_passwors_usecase.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-
-import 'package:empowerhr_moblie/presentation/page/auth/login_page.dart'; 
+import 'package:empowerhr_moblie/presentation/page/auth/login_page.dart';
 
 class CreateNewPassword extends StatefulWidget {
-  final String email; 
+  final String email;
   const CreateNewPassword({super.key, required this.email});
 
   @override
@@ -17,15 +16,15 @@ class _CreateNewPassword_pageState extends State<CreateNewPassword> {
   final TextEditingController _confirmPasswordController = TextEditingController();
   final FocusNode _newPasswordFocus = FocusNode();
   final FocusNode _confirmPasswordFocus = FocusNode();
-  bool isMessageVisible = false; 
-  bool isLoading = false; 
-  bool isNewPasswordVisible = false; 
-  bool isConfirmPasswordVisible = false; 
+  bool isMessageVisible = false;
+  bool isLoading = false;
+  bool isNewPasswordVisible = false;
+  bool isConfirmPasswordVisible = false;
+  bool _hasLengthError = false; // Biến theo dõi lỗi độ dài mật khẩu
 
   @override
   void initState() {
     super.initState();
-    
     setState(() {
       isMessageVisible = true;
     });
@@ -119,6 +118,7 @@ class _CreateNewPassword_pageState extends State<CreateNewPassword> {
                       isNewPasswordVisible = !isNewPasswordVisible;
                     });
                   },
+                  hasError: _hasLengthError && _newPasswordController.text.length < 8,
                 ),
                 const SizedBox(height: 20),
                 _buildTextField(
@@ -133,6 +133,7 @@ class _CreateNewPassword_pageState extends State<CreateNewPassword> {
                       isConfirmPasswordVisible = !isConfirmPasswordVisible;
                     });
                   },
+                  hasError: _hasLengthError && _confirmPasswordController.text.length < 8,
                 ),
                 const SizedBox(height: 20),
                 Text(
@@ -148,12 +149,12 @@ class _CreateNewPassword_pageState extends State<CreateNewPassword> {
                 const SizedBox(height: 40),
                 ElevatedButton(
                   onPressed: isLoading
-                      ? null // Vô hiệu hóa nút khi đang loading
+                      ? null
                       : () async {
                           final newPassword = _newPasswordController.text.trim();
-                          final confirmPassword =
-                              _confirmPasswordController.text.trim();
+                          final confirmPassword = _confirmPasswordController.text.trim();
 
+                          // Kiểm tra trường rỗng
                           if (newPassword.isEmpty || confirmPassword.isEmpty) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
@@ -163,7 +164,24 @@ class _CreateNewPassword_pageState extends State<CreateNewPassword> {
                             return;
                           }
 
+                          // Kiểm tra độ dài mật khẩu
+                          if (newPassword.length < 8 || confirmPassword.length < 8) {
+                            setState(() {
+                              _hasLengthError = true;
+                            });
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Password must be at least 8 characters'),
+                              ),
+                            );
+                            return;
+                          }
+
+                          // Kiểm tra mật khẩu khớp
                           if (newPassword != confirmPassword) {
+                            setState(() {
+                              _hasLengthError = false; // Reset lỗi độ dài nếu có
+                            });
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
                                 content: Text('Passwords do not match'),
@@ -172,14 +190,14 @@ class _CreateNewPassword_pageState extends State<CreateNewPassword> {
                             return;
                           }
 
+                          // Nếu qua tất cả kiểm tra, reset lỗi và tiến hành gọi API
                           setState(() {
-                            isLoading = true; // Bật loading
+                            _hasLengthError = false;
+                            isLoading = true;
                           });
 
                           try {
-                            // Gọi API resetPassword
-                            final result = await resetPassword(
-                                widget.email, newPassword);
+                            final result = await resetPassword(widget.email, newPassword);
 
                             if (result['status'] == 200) {
                               ScaffoldMessenger.of(context).showSnackBar(
@@ -187,7 +205,6 @@ class _CreateNewPassword_pageState extends State<CreateNewPassword> {
                                   content: Text(result['message']),
                                 ),
                               );
-                              // Chờ 2 giây rồi chuyển về LoginPage
                               await Future.delayed(const Duration(seconds: 2));
                               Navigator.pushReplacement(
                                 context,
@@ -210,7 +227,7 @@ class _CreateNewPassword_pageState extends State<CreateNewPassword> {
                             );
                           } finally {
                             setState(() {
-                              isLoading = false; // Tắt loading
+                              isLoading = false;
                             });
                           }
                         },
@@ -250,8 +267,9 @@ class _CreateNewPassword_pageState extends State<CreateNewPassword> {
     required FocusNode focusNode,
     required String hintText,
     bool isPassword = false,
-    required bool isPasswordVisible, // Trạng thái hiển thị mật khẩu riêng
-    required VoidCallback onToggleVisibility, // Callback để đổi trạng thái
+    required bool isPasswordVisible,
+    required VoidCallback onToggleVisibility,
+    bool hasError = false, // Thêm tham số để kiểm tra lỗi
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -276,6 +294,10 @@ class _CreateNewPassword_pageState extends State<CreateNewPassword> {
                 blurRadius: 4,
               ),
             ],
+            border: Border.all(
+              color: hasError ? Colors.red : Colors.transparent, // Đổi màu viền nếu có lỗi
+              width: 2,
+            ),
           ),
           margin: const EdgeInsets.only(left: 31, right: 31),
           padding: const EdgeInsets.symmetric(horizontal: 12),

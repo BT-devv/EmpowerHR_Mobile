@@ -59,13 +59,12 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
   late TextEditingController _endDateController;
 
   final ImagePicker _picker = ImagePicker();
-  File? _selectedImage; // Lưu trữ ảnh được chọn
+  File? _selectedImage; 
 
   @override
   void initState() {
     super.initState();
 
-    // Khởi tạo FocusNode và isFocusedList
     _focusNodes.addAll(List.generate(23, (index) => FocusNode()));
     _isFocusedList.addAll(List.generate(23, (index) => false));
 
@@ -121,12 +120,10 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
 
   @override
   void dispose() {
-    // Giải phóng các FocusNode
     for (var node in _focusNodes) {
       node.dispose();
     }
 
-    // Giải phóng các TextEditingController
     _firstNameController.dispose();
     _middleNameController.dispose();
     _lastNameController.dispose();
@@ -184,7 +181,6 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
       'postcode': _postcodeController.text,
     };
 
-    // Phát sự kiện UpdateUserRequested
     context.read<UpdateUserBloc>().add(UpdateUserRequested(
           userId: widget.user!.id!,
           updatedData: updatedData,
@@ -192,67 +188,50 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
         ));
   }
 
-  // mở camera
   Future<void> _openCamera(BuildContext context) async {
-
     PermissionStatus cameraStatus = await Permission.camera.status;
 
     if (cameraStatus.isGranted) {
-      // Quyền đã được cấp, mở camera
       final XFile? image = await _picker.pickImage(source: ImageSource.camera);
       if (image != null) {
-        
         print("Đường dẫn ảnh từ camera: ${image.path}");
-        
       }
     } else if (cameraStatus.isDenied || cameraStatus.isPermanentlyDenied) {
-      // Yêu cầu quyền nếu chưa được cấp
       PermissionStatus newStatus = await Permission.camera.request();
       if (newStatus.isGranted) {
-        // Quyền vừa được cấp, mở camera
         final XFile? image =
             await _picker.pickImage(source: ImageSource.camera);
         if (image != null) {
           print("Đường dẫn ảnh từ camera: ${image.path}");
         }
       } else {
-        // Quyền bị từ chối, hiển thị thông báo
         _showPermissionDeniedDialog(context, "camera");
       }
     }
   }
 
-  // Hàm mở thư viện ảnh
   Future<void> _openGallery(BuildContext context) async {
-    // Kiểm tra quyền truy cập thư viện ảnh
     PermissionStatus photosStatus = await Permission.photos.status;
 
     if (photosStatus.isGranted) {
-      // Quyền đã được cấp, mở thư viện ảnh
       final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
       if (image != null) {
-        // Xử lý ảnh (ví dụ: hiển thị hoặc lưu)
         print("Đường dẫn ảnh từ thư viện: ${image.path}");
-        // Bạn có thể hiển thị ảnh hoặc lưu nó tùy theo nhu cầu
       }
     } else if (photosStatus.isDenied || photosStatus.isPermanentlyDenied) {
-      // Yêu cầu quyền nếu chưa được cấp
       PermissionStatus newStatus = await Permission.photos.request();
       if (newStatus.isGranted) {
-        // Quyền vừa được cấp, mở thư viện ảnh
         final XFile? image =
             await _picker.pickImage(source: ImageSource.gallery);
         if (image != null) {
           print("Đường dẫn ảnh từ thư viện: ${image.path}");
         }
       } else {
-        // Quyền bị từ chối, hiển thị thông báo
         _showPermissionDeniedDialog(context, "photos");
       }
     }
   }
 
-  // Hàm hiển thị thông báo khi quyền bị từ chối
   void _showPermissionDeniedDialog(
       BuildContext context, String permissionType) {
     showDialog(
@@ -275,7 +254,6 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
             TextButton(
               onPressed: () async {
                 Navigator.of(context).pop();
-                // Mở cài đặt ứng dụng để người dùng cấp quyền
                 await openAppSettings();
               },
               child: const Text("Mở cài đặt"),
@@ -286,7 +264,6 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
     );
   }
 
-  // hiển thị bottom sheet với 2 tùy chọn
   void _showImageSourceOptions(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -534,7 +511,6 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                                 ),
                                 child: Stack(
                                   children: [
-                                    // Vòng tròn lớn
                                     Container(
                                       height: 200,
                                       width: 200,
@@ -545,49 +521,43 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                                           color: Colors.black,
                                           width: 2,
                                         ),
-                                        image: DecorationImage(
-                                          image: _selectedImage != null
-                                              ? FileImage(_selectedImage!)
-                                              : widget.user?.avatar != null
-                                                  ? NetworkImage(
-                                                      widget.user!.avatar!)
-                                                  : const AssetImage(
-                                                          'assets/QR_code.png')
-                                                      as ImageProvider,
+                                        image: const DecorationImage(
+                                          image: AssetImage(
+                                                  'assets/avata.png')
+                                              as ImageProvider,
                                           fit: BoxFit.cover,
                                         ),
                                       ),
                                     ),
-                                    // Vòng tròn nhỏ ở góc phải dưới
-                                    Positioned(
-                                        bottom: 10,
-                                        right: 10,
-                                        child: GestureDetector(
-                                          behavior: HitTestBehavior.opaque,
-                                          onTap: () {
-                                            print(
-                                                "Camera icon tapped"); // Debug log
-                                            _showImageSourceOptions(context);
-                                          },
-                                          child: Container(
-                                            height: 40,
-                                            width: 40,
-                                            decoration: BoxDecoration(
-                                              shape: BoxShape.circle,
-                                              color: Colors.white,
-                                              border: Border.all(
-                                                color: Colors.black,
-                                                width: 2,
-                                              ),
-                                            ),
-                                            child: const Icon(
-                                              Icons.camera_alt,
-                                              size: 24,
-                                              color: Colors.black,
-                                            ),
-                                          ),
-                                        )),
-                                  ],
+                                  //   Positioned(
+                                  //       bottom: 10,
+                                  //       right: 10,
+                                  //       child: GestureDetector(
+                                  //         behavior: HitTestBehavior.opaque,
+                                  //         onTap: () {
+                                  //           print(
+                                  //               "Camera icon tapped"); // Debug log
+                                  //           _showImageSourceOptions(context);
+                                  //         },
+                                  //         child: Container(
+                                  //           height: 40,
+                                  //           width: 40,
+                                  //           decoration: BoxDecoration(
+                                  //             shape: BoxShape.circle,
+                                  //             color: Colors.white,
+                                  //             border: Border.all(
+                                  //               color: Colors.black,
+                                  //               width: 2,
+                                  //             ),
+                                  //           ),
+                                  //           child: const Icon(
+                                  //             Icons.camera_alt,
+                                  //             size: 24,
+                                  //             color: Colors.black,
+                                  //           ),
+                                  //         ),
+                                  //       )),
+                                   ],
                                 ),
                               ),
                             ],

@@ -5,8 +5,8 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class ApiService {
   static String createApiUrl(String endpoint) {
-    final port = dotenv.env['PORT'] ?? '3000'; // Lấy cổng từ .env
-    final baseUrl = 'http://192.168.100.68:$port/api/'; // URL
+    final port = dotenv.env['PORT'] ?? '3000'; 
+    final baseUrl = 'http://192.168.100.68:$port/api/'; 
     //final baseUrl = 'http://10.7.91.254:$port/api/';
     print('URL: $baseUrl$endpoint');
     return '$baseUrl$endpoint';
@@ -35,12 +35,10 @@ class ApiService {
     String endpoint, {
     Map<String, String>? headers,
   }) async {
-    // Kiểm tra endpoint không rỗng
     if (endpoint.isEmpty) {
       throw ArgumentError('Endpoint cannot be empty');
     }
 
-    // Kiểm tra data không null
     if (data.isEmpty) {
       throw ArgumentError('Data cannot be empty');
     }
@@ -80,6 +78,25 @@ class ApiService {
         headers: headers ?? {"Content-Type": "application/json"},
       );
 
+      return response;
+    } catch (error) {
+      print('Error occurred during GET request: $error');
+      rethrow;
+    }
+  }
+
+  Future<http.Response> getReqForWorklog(String endpoint,
+      {Map<String, String>? headers, Map<String, String>? query}) async {
+    final baseUrl = createApiUrl(endpoint);
+
+    final uri = Uri.parse(baseUrl).replace(queryParameters: query);
+
+    try {
+      print("Attempting to fetch data from $uri with headers: $headers");
+      final response = await http.get(
+        uri,
+        headers: headers ?? {"Content-Type": "application/json"},
+      );
       return response;
     } catch (error) {
       print('Error occurred during GET request: $error');
