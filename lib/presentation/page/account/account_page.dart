@@ -1,7 +1,7 @@
 import 'dart:io';
-
 import 'package:empowerhr_moblie/data/models/user_model.dart';
 import 'package:empowerhr_moblie/data/service/api_service.dart';
+import 'package:empowerhr_moblie/data/service/socket_service.dart';
 import 'package:empowerhr_moblie/presentation/bloc/user_info/user_bloc.dart';
 import 'package:empowerhr_moblie/presentation/bloc/user_info/user_event.dart';
 import 'package:empowerhr_moblie/presentation/bloc/user_info/user_state.dart';
@@ -13,8 +13,9 @@ import 'package:empowerhr_moblie/presentation/page/account/manage_notification_p
 import 'package:empowerhr_moblie/presentation/page/account/personal_information_page.dart';
 import 'package:empowerhr_moblie/presentation/page/account/privacy_policy_page.dart';
 import 'package:empowerhr_moblie/presentation/page/account/terms_and_condition_page.dart';
-import 'package:empowerhr_moblie/presentation/page/account/two_factor_auth_page.dart';
+import 'package:empowerhr_moblie/presentation/page/auth/forgot_password_page.dart';
 import 'package:empowerhr_moblie/presentation/page/auth/login_page.dart';
+import 'package:empowerhr_moblie/presentation/page/coming_soon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -29,10 +30,9 @@ class AccountPage extends StatefulWidget {
 
 class _AccountPageState extends State<AccountPage> {
   bool isLoading = false;
-  File? _selectedImage; // Biến để lưu ảnh đã chọn
   final Map<String, Widget> _pageMapping = {
     "Personal Information": PersonalInformationPage(),
-    "Change Password": const ChangePasswordPage(),
+    "Change Password": ForgotPassword_page(),
     "Manage Account Status": const ManageAccountStatusPage(),
     "Manage Notification": const ManageNotificationPage(),
     "Change theme": const ChangeThemePage(),
@@ -40,39 +40,6 @@ class _AccountPageState extends State<AccountPage> {
     "Privacy Policy": const PrivacyPolicyPage(),
     "Employee's rights": const EmployeeRightsPage(),
   };
-
-  Future<void> _showImageSourceOptions(BuildContext context) async {
-    // Placeholder cho logic chọn ảnh (cần tích hợp image_picker)
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Select Image Source'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.camera),
-                title: const Text('Camera'),
-                onTap: () {
-                  // Thêm logic lấy ảnh từ camera
-                  Navigator.pop(context);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.photo),
-                title: const Text('Gallery'),
-                onTap: () {
-                  // Thêm logic lấy ảnh từ gallery
-                  Navigator.pop(context);
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -97,11 +64,9 @@ class _AccountPageState extends State<AccountPage> {
                 children: [
                   CustomScrollView(
                     slivers: [
-                      // Phần còn lại của nội dung
                       SliverList(
                         delegate: SliverChildListDelegate(
                           [
-                            // Stack chứa avatar
                             Stack(
                               clipBehavior: Clip.none,
                               children: [
@@ -123,7 +88,6 @@ class _AccountPageState extends State<AccountPage> {
                                   ),
                                   child: Stack(
                                     children: [
-                                      // Vòng tròn lớn (avatar)
                                       Container(
                                         height: 200,
                                         width: 200,
@@ -134,14 +98,10 @@ class _AccountPageState extends State<AccountPage> {
                                             color: Colors.black,
                                             width: 2,
                                           ),
-                                          image: DecorationImage(
-                                            image: _selectedImage != null
-                                                ? FileImage(_selectedImage!)
-                                                : user.avatar != null
-                                                    ? NetworkImage(user.avatar!)
-                                                    : const AssetImage(
-                                                            'assets/QR_code.png')
-                                                        as ImageProvider,
+                                          image: const DecorationImage(
+                                            image:
+                                                AssetImage('assets/avata.png')
+                                                    as ImageProvider,
                                             fit: BoxFit.cover,
                                           ),
                                         ),
@@ -223,8 +183,13 @@ class _AccountPageState extends State<AccountPage> {
                                       height: 20,
                                       width: 20,
                                     ),
-                                    onTap: () => _navigateToPage(
-                                        context, "Change Password"),
+                                    onTap: () => Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            ForgotPassword_page(),
+                                      ),
+                                    ),
                                   ),
                                   const Divider(),
                                   _buildMenuItem(
@@ -234,8 +199,14 @@ class _AccountPageState extends State<AccountPage> {
                                       height: 20,
                                       width: 20,
                                     ),
-                                    onTap: () => _navigateToPage(
-                                        context, "Manage Account Status"),
+                                    comingSoon: true,
+                                    onTap: () => Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            UnderDevelopmentPage(),
+                                      ),
+                                    ),
                                   ),
                                   const Divider(),
                                   _buildMenuItem(
@@ -245,8 +216,14 @@ class _AccountPageState extends State<AccountPage> {
                                       height: 20,
                                       width: 20,
                                     ),
-                                    onTap: () => _navigateToPage(
-                                        context, "Manage Notification"),
+                                    comingSoon: true,
+                                    onTap: () => Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            UnderDevelopmentPage(),
+                                      ),
+                                    ),
                                   ),
                                   Padding(
                                     padding: const EdgeInsets.only(
@@ -270,11 +247,15 @@ class _AccountPageState extends State<AccountPage> {
                                       width: 20,
                                     ),
                                     comingSoon: true,
-                                    onTap: () => _navigateToPage(
-                                        context, "Change theme"),
+                                    onTap: () => Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            UnderDevelopmentPage(),
+                                      ),
+                                    ),
                                   ),
                                   const Divider(),
-                                  
                                   Padding(
                                     padding: const EdgeInsets.only(
                                         top: 10, bottom: 8),
@@ -296,8 +277,14 @@ class _AccountPageState extends State<AccountPage> {
                                       height: 20,
                                       width: 20,
                                     ),
-                                    onTap: () => _navigateToPage(
-                                        context, "Terms & Condition"),
+                                    comingSoon: true,
+                                    onTap: () => Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            UnderDevelopmentPage(),
+                                      ),
+                                    ),
                                   ),
                                   const Divider(),
                                   _buildMenuItem(
@@ -307,8 +294,14 @@ class _AccountPageState extends State<AccountPage> {
                                       height: 20,
                                       width: 20,
                                     ),
-                                    onTap: () => _navigateToPage(
-                                        context, "Privacy Policy"),
+                                    comingSoon: true,
+                                    onTap: () => Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            UnderDevelopmentPage(),
+                                      ),
+                                    ),
                                   ),
                                   const Divider(),
                                   _buildMenuItem(
@@ -495,7 +488,8 @@ Future<void> logout(BuildContext context) async {
     await prefs.remove('token');
     await prefs.remove('idUser');
     print('Token and userId removed from SharedPreferences');
-
+    await NotificationService().clearNotifications();
+    print('Notifications cleared');
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (context) => LoginPage()),

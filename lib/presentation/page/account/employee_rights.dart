@@ -5,28 +5,24 @@ class EmployeeRightsPage extends StatelessWidget {
   const EmployeeRightsPage({super.key});
 
   void _navigateToDetailPage(BuildContext context) {
-    // Placeholder cho điều hướng đến trang chi tiết
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Navigating to Detail Payroll History')),
     );
   }
 
   void _navigateToContractPage(BuildContext context) {
-    // Placeholder cho điều hướng đến trang hợp đồng
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Navigating to Labor Contract')),
     );
   }
 
   void _navigateToInsurancePage(BuildContext context) {
-    // Placeholder cho điều hướng đến trang bảo hiểm
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Navigating to Insurance')),
     );
   }
 
   void _contactHR(BuildContext context) {
-    // Placeholder cho liên hệ HR
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Contacting HR')),
     );
@@ -37,7 +33,6 @@ class EmployeeRightsPage extends StatelessWidget {
     return Scaffold(
       body: Column(
         children: [
-          // Header
           Container(
             height: 150,
             decoration: const BoxDecoration(
@@ -110,7 +105,6 @@ class EmployeeRightsPage extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  // Detail payroll history
                   ListTile(
                     title: Text(
                       'Detail payroll history',

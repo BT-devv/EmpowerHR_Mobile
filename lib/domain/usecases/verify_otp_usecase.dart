@@ -8,7 +8,6 @@ Future<Map<String, dynamic>> verifyOTP(String emailCompany, String otp) async {
   };
 
   try {
-    // Gọi phương thức postReq để gửi yêu cầu xác minh OTP
     final http.Response response =
         await ApiService().postReq(credentials, 'user/verify-otp');
     final Map<String, dynamic> data = jsonDecode(response.body);

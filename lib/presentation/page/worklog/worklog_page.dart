@@ -1,4 +1,4 @@
-import 'package:empowerhr_moblie/domain/usecases/sumary_atendance_usecase.dart';
+import 'package:empowerhr_moblie/domain/usecases/get_antendance_by_month_usecase.dart';
 import 'package:empowerhr_moblie/presentation/page/worklog/absence_history.dart';
 import 'package:empowerhr_moblie/presentation/page/worklog/create_request.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -18,7 +18,7 @@ class _WorkLogPageState extends State<WorkLogPage> {
   @override
   void initState() {
     super.initState();
-    // _attendanceSummaryFuture = getAttendanceSummary();
+    _attendanceSummaryFuture = getEmployeeAttendanceSummary();
   }
 
   Widget _buildStatCard(String title, String value, Color backgroundColor, Color textColor) {
@@ -164,7 +164,7 @@ class _WorkLogPageState extends State<WorkLogPage> {
               Container(
                 margin: const EdgeInsets.only(left: 15, top: 25),
                 child: Text(
-                  "Your monthly report",
+                  "Your yearly report", // Sửa tiêu đề để phản ánh dữ liệu theo năm
                   style: GoogleFonts.baloo2(
                     textStyle: const TextStyle(
                       fontSize: 15,
@@ -201,9 +201,15 @@ class _WorkLogPageState extends State<WorkLogPage> {
 
                     final data = snapshot.data!['data'] as Map<String, dynamic>;
                     final total = data['total'].toString();
-                    final onTimeCount = data['onTimeCount'].toString();
-                    final absentCount = data['absentCount'].toString();
-                    final lateCount = data['lateCount'].toString();
+                    final present = data['present'].toString();
+                    final absent = data['absent'].toString();
+                    final late = data['late'].toString();
+
+                    final currentMonth = DateTime.now().month - 1; // Tháng hiện tại là tháng 5 (index 4)
+
+                    final presentSpots = List.generate(12, (index) => FlSpot(index.toDouble(), index == currentMonth ? (data['present'] as int).toDouble() : 0));
+                    final absentSpots = List.generate(12, (index) => FlSpot(index.toDouble(), index == currentMonth ? (data['absent'] as int).toDouble() : 0)); // Sửa lỗi: dùng data['absent'] thay vì data['present']
+                    final lateSpots = List.generate(12, (index) => FlSpot(index.toDouble(), index == currentMonth ? (data['late'] as int).toDouble() : 0));
 
                     return Column(
                       children: [
@@ -222,8 +228,8 @@ class _WorkLogPageState extends State<WorkLogPage> {
                               color: Colors.grey,
                             ),
                             _buildStatCard(
-                              'Early',
-                              onTimeCount,
+                              'Present',
+                              present,
                               Colors.white,
                               Colors.green,
                             ),
@@ -234,7 +240,7 @@ class _WorkLogPageState extends State<WorkLogPage> {
                             ),
                             _buildStatCard(
                               'Absence',
-                              absentCount,
+                              absent,
                               Colors.white,
                               Colors.red,
                             ),
@@ -244,10 +250,10 @@ class _WorkLogPageState extends State<WorkLogPage> {
                               color: Colors.grey,
                             ),
                             _buildStatCard(
-                              'OT',
-                              lateCount,
+                              'Late',
+                              late,
                               Colors.white,
-                              Colors.blue,
+                              Colors.yellow,
                             ),
                           ],
                         ),
@@ -277,11 +283,11 @@ class _WorkLogPageState extends State<WorkLogPage> {
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.end,
                                   children: [
-                                    _buildLegend('Early', Colors.green),
+                                    _buildLegend('Present', Colors.green),
                                     const SizedBox(width: 10),
-                                    _buildLegend('Late', Colors.red),
+                                    _buildLegend('Absence', Colors.red),
                                     const SizedBox(width: 10),
-                                    _buildLegend('OT', Colors.blue),
+                                    _buildLegend('Late', Colors.yellow),
                                   ],
                                 ),
                               ),
@@ -477,20 +483,7 @@ class _WorkLogPageState extends State<WorkLogPage> {
                                             maxY: 40,
                                             lineBarsData: [
                                               LineChartBarData(
-                                                spots: const [
-                                                  FlSpot(0, 20),
-                                                  FlSpot(1, 15),
-                                                  FlSpot(2, 25),
-                                                  FlSpot(3, 30),
-                                                  FlSpot(4, 20),
-                                                  FlSpot(5, 18),
-                                                  FlSpot(6, 22),
-                                                  FlSpot(7, 15),
-                                                  FlSpot(8, 25),
-                                                  FlSpot(9, 20),
-                                                  FlSpot(10, 10),
-                                                  FlSpot(11, 28),
-                                                ],
+                                                spots: presentSpots,
                                                 isCurved: true,
                                                 color: Colors.green,
                                                 dotData: FlDotData(
@@ -506,20 +499,7 @@ class _WorkLogPageState extends State<WorkLogPage> {
                                                 belowBarData: BarAreaData(show: false),
                                               ),
                                               LineChartBarData(
-                                                spots: const [
-                                                  FlSpot(0, 5),
-                                                  FlSpot(1, 10),
-                                                  FlSpot(2, 0),
-                                                  FlSpot(3, 5),
-                                                  FlSpot(4, 0),
-                                                  FlSpot(5, 3),
-                                                  FlSpot(6, 7),
-                                                  FlSpot(7, 2),
-                                                  FlSpot(8, 4),
-                                                  FlSpot(9, 1),
-                                                  FlSpot(10, 6),
-                                                  FlSpot(11, 0),
-                                                ],
+                                                spots: absentSpots,
                                                 isCurved: true,
                                                 color: Colors.red,
                                                 dotData: FlDotData(
@@ -535,28 +515,15 @@ class _WorkLogPageState extends State<WorkLogPage> {
                                                 belowBarData: BarAreaData(show: false),
                                               ),
                                               LineChartBarData(
-                                                spots: const [
-                                                  FlSpot(0, 15),
-                                                  FlSpot(1, 5),
-                                                  FlSpot(2, -5),
-                                                  FlSpot(3, 20),
-                                                  FlSpot(4, 10),
-                                                  FlSpot(5, 12),
-                                                  FlSpot(6, 8),
-                                                  FlSpot(7, 15),
-                                                  FlSpot(8, 5),
-                                                  FlSpot(9, 18),
-                                                  FlSpot(10, 7),
-                                                  FlSpot(11, 20),
-                                                ],
+                                                spots: lateSpots,
                                                 isCurved: true,
-                                                color: Colors.blue,
+                                                color: Colors.yellow,
                                                 dotData: FlDotData(
                                                   show: true,
                                                   getDotPainter: (spot, percent, barData, index) =>
                                                       FlDotCirclePainter(
                                                     radius: 4,
-                                                    color: Colors.blue,
+                                                    color: Colors.yellow,
                                                     strokeWidth: 2,
                                                     strokeColor: Colors.white,
                                                   ),

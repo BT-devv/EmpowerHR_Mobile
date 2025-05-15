@@ -1,6 +1,48 @@
 import 'package:empowerhr_moblie/domain/usecases/absence_history_usecase.dart';
+import 'package:empowerhr_moblie/domain/usecases/pending_absence.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+
+Future<Map<String, dynamic>> getCombinedAbsences() async {
+  try {
+    final results = await Future.wait([
+      getAbsencesHistory(),
+      getPendingAbsences(),
+    ]);
+
+    final historyResult = results[0];
+    final pendingResult = results[1];
+
+    if (historyResult['success'] != true || pendingResult['success'] != true) {
+      return {
+        'success': false,
+        'message': historyResult['success'] != true
+            ? historyResult['message']
+            : pendingResult['message'],
+      };
+    }
+
+    List<dynamic> combinedAbsences = [
+      ...historyResult['absences'] as List<dynamic>,
+      ...pendingResult['absences'] as List<dynamic>,
+    ];
+
+    combinedAbsences.sort((a, b) => DateTime.parse(b['createdAt'])
+        .compareTo(DateTime.parse(a['createdAt'])));
+
+    return {
+      'success': true,
+      'message': 'Combined absences retrieved successfully',
+      'absences': combinedAbsences,
+    };
+  } catch (error) {
+    print('Error combining absences: $error');
+    return {
+      'success': false,
+      'message': 'Error combining absences: $error',
+    };
+  }
+}
 
 class AbsencesHistoryPage extends StatefulWidget {
   const AbsencesHistoryPage({super.key});
@@ -21,30 +63,48 @@ class _AbsencesHistoryPageState extends State<AbsencesHistoryPage> {
   @override
   void initState() {
     super.initState();
-    _absencesFuture = getAbsencesHistory();
+    _absencesFuture = getCombinedAbsences(); // Gọi hàm gộp API
   }
 
   List<Map<String, dynamic>> _filterAbsences(List<dynamic> absences) {
-    return absences.where((absence) {
-      final matchesSearch = _searchQuery.isEmpty ||
-          absence['employeeID'].toString().toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          absence['name'].toString().toLowerCase().contains(_searchQuery.toLowerCase());
+    return absences
+        .where((absence) {
+          final matchesSearch = _searchQuery.isEmpty ||
+              absence['employeeID']
+                  .toString()
+                  .toLowerCase()
+                  .contains(_searchQuery.toLowerCase()) ||
+              absence['name']
+                  .toString()
+                  .toLowerCase()
+                  .contains(_searchQuery.toLowerCase());
 
-      final matchesDate = _selectedDate == null ||
-          absence['dateFrom'].toString().contains(
-              "${_selectedDate!.year}-${_selectedDate!.month.toString().padLeft(2, '0')}-${_selectedDate!.day.toString().padLeft(2, '0')}");
+          final matchesDate = _selectedDate == null ||
+              absence['dateFrom'].toString().contains(
+                  "${_selectedDate!.year}-${_selectedDate!.month.toString().padLeft(2, '0')}-${_selectedDate!.day.toString().padLeft(2, '0')}");
 
-      final matchesStatus = _statusFilter == null || _statusFilter == 'All' || absence['status'] == _statusFilter;
-      final matchesAbsence = _absenceFilter == null || _absenceFilter == 'All' || absence['type'] == _absenceFilter;
+          final matchesStatus = _statusFilter == null ||
+              _statusFilter == 'All' ||
+              absence['status'] == _statusFilter;
+          final matchesAbsence = _absenceFilter == null ||
+              _absenceFilter == 'All' ||
+              absence['type'] == _absenceFilter;
 
-      return matchesSearch && matchesDate && matchesStatus && matchesAbsence;
-    }).cast<Map<String, dynamic>>().toList();
+          return matchesSearch &&
+              matchesDate &&
+              matchesStatus &&
+              matchesAbsence;
+        })
+        .cast<Map<String, dynamic>>()
+        .toList();
   }
 
-  List<Map<String, dynamic>> _paginateAbsences(List<Map<String, dynamic>> absences) {
+  List<Map<String, dynamic>> _paginateAbsences(
+      List<Map<String, dynamic>> absences) {
     final start = (_currentPage - 1) * _rowsPerPage;
     final end = start + _rowsPerPage;
-    return absences.sublist(start, end > absences.length ? absences.length : end);
+    return absences.sublist(
+        start, end > absences.length ? absences.length : end);
   }
 
   void _changePage(int page) {
@@ -56,14 +116,14 @@ class _AbsencesHistoryPageState extends State<AbsencesHistoryPage> {
   void _changeRowsPerPage(int value) {
     setState(() {
       _rowsPerPage = value;
-      _currentPage = 1; // Reset về trang 1 khi thay đổi số hàng
+      _currentPage = 1;
     });
   }
 
   void _onSearch(String value) {
     setState(() {
       _searchQuery = value;
-      _currentPage = 1; // Reset về trang 1 khi tìm kiếm
+      _currentPage = 1;
     });
   }
 
@@ -77,7 +137,7 @@ class _AbsencesHistoryPageState extends State<AbsencesHistoryPage> {
     if (picked != null && picked != _selectedDate) {
       setState(() {
         _selectedDate = picked;
-        _currentPage = 1; // Reset về trang 1 khi chọn ngày
+        _currentPage = 1;
       });
     }
   }
@@ -95,7 +155,8 @@ class _AbsencesHistoryPageState extends State<AbsencesHistoryPage> {
                 hint: const Text('Filter by Status'),
                 value: _statusFilter,
                 isExpanded: true,
-                items: ['All', 'Pending', 'Rejected', 'Approved'].map((String value) {
+                items: ['All', 'Pending', 'Rejected', 'Approved']
+                    .map((String value) {
                   return DropdownMenuItem<String>(
                     value: value,
                     child: Text(value),
@@ -104,7 +165,7 @@ class _AbsencesHistoryPageState extends State<AbsencesHistoryPage> {
                 onChanged: (String? value) {
                   setState(() {
                     _statusFilter = value;
-                    _currentPage = 1; // Reset về trang 1 khi lọc
+                    _currentPage = 1;
                   });
                   Navigator.of(context).pop();
                 },
@@ -114,7 +175,8 @@ class _AbsencesHistoryPageState extends State<AbsencesHistoryPage> {
                 hint: const Text('Filter by Absence'),
                 value: _absenceFilter,
                 isExpanded: true,
-                items: ['All', 'Full Day', 'Half Day'].map((String value) {
+                items: ['All', 'Full Day', 'Half Day', 'Leave Desk']
+                    .map((String value) {
                   return DropdownMenuItem<String>(
                     value: value,
                     child: Text(value),
@@ -123,7 +185,7 @@ class _AbsencesHistoryPageState extends State<AbsencesHistoryPage> {
                 onChanged: (String? value) {
                   setState(() {
                     _absenceFilter = value;
-                    _currentPage = 1; // Reset về trang 1 khi lọc
+                    _currentPage = 1;
                   });
                   Navigator.of(context).pop();
                 },
@@ -136,7 +198,7 @@ class _AbsencesHistoryPageState extends State<AbsencesHistoryPage> {
                 setState(() {
                   _statusFilter = null;
                   _absenceFilter = null;
-                  _currentPage = 1; // Reset về trang 1 khi xóa bộ lọc
+                  _currentPage = 1;
                 });
                 Navigator.of(context).pop();
               },
@@ -181,10 +243,12 @@ class _AbsencesHistoryPageState extends State<AbsencesHistoryPage> {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());
             }
-            if (snapshot.hasError || !snapshot.hasData || !snapshot.data!['success']) {
+            if (snapshot.hasError ||
+                !snapshot.hasData ||
+                !snapshot.data!['success']) {
               return Center(
                 child: Text(
-                  snapshot.data?['message'] ?? 'Error loading absences history',
+                  snapshot.data?['message'] ?? 'Error loading absences',
                   style: const TextStyle(color: Colors.red),
                 ),
               );
@@ -194,13 +258,15 @@ class _AbsencesHistoryPageState extends State<AbsencesHistoryPage> {
             final filteredAbsences = _filterAbsences(absences);
             final paginatedAbsences = _paginateAbsences(filteredAbsences);
 
+            if (filteredAbsences.isEmpty) {
+              return const Center(child: Text('No absences found'));
+            }
+
             return Column(
               children: [
-                // Thanh tìm kiếm, nút chọn ngày, và bộ lọc
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // Ô tìm kiếm
                     Expanded(
                       child: TextField(
                         decoration: InputDecoration(
@@ -214,14 +280,12 @@ class _AbsencesHistoryPageState extends State<AbsencesHistoryPage> {
                       ),
                     ),
                     const SizedBox(width: 10),
-                    // Nút chọn ngày
                     IconButton(
                       icon: const Icon(Icons.calendar_today),
                       onPressed: () => _pickDate(context),
                       tooltip: 'Pick Date',
                     ),
                     const SizedBox(width: 10),
-                    // Nút bộ lọc
                     IconButton(
                       icon: const Icon(Icons.filter_list),
                       onPressed: () => _showFilterDialog(context),
@@ -230,7 +294,6 @@ class _AbsencesHistoryPageState extends State<AbsencesHistoryPage> {
                   ],
                 ),
                 const SizedBox(height: 16),
-                // Bảng dữ liệu
                 Expanded(
                   child: SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
@@ -247,12 +310,16 @@ class _AbsencesHistoryPageState extends State<AbsencesHistoryPage> {
                       rows: paginatedAbsences.map((absence) {
                         return DataRow(cells: [
                           DataCell(Text(absence['employeeID'] ?? '')),
-                          DataCell(Text(absence['lineManagers']?.isNotEmpty == true ? absence['lineManagers'][0] : '')),
+                          DataCell(Text(
+                              absence['lineManagers']?.isNotEmpty == true
+                                  ? absence['lineManagers'][0]
+                                  : '')),
                           DataCell(Text(
                               '${absence['dateFrom']?.split('T')[0] ?? ''} to ${absence['dateTo']?.split('T')[0] ?? ''}')),
                           DataCell(
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 2),
                               decoration: BoxDecoration(
                                 color: _getStatusColor(absence['status']),
                                 borderRadius: BorderRadius.circular(4),
@@ -260,7 +327,9 @@ class _AbsencesHistoryPageState extends State<AbsencesHistoryPage> {
                               child: Text(
                                 absence['status'] ?? '',
                                 style: GoogleFonts.baloo2(
-                                  textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                                  textStyle: const TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold),
                                 ),
                               ),
                             ),
@@ -276,7 +345,6 @@ class _AbsencesHistoryPageState extends State<AbsencesHistoryPage> {
                     ),
                   ),
                 ),
-                // Phân trang
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -284,17 +352,27 @@ class _AbsencesHistoryPageState extends State<AbsencesHistoryPage> {
                       children: [
                         IconButton(
                           icon: const Icon(Icons.arrow_back_ios, size: 12),
-                          onPressed: _currentPage > 1 ? () => _changePage(_currentPage - 1) : null,
+                          onPressed: _currentPage > 1
+                              ? () => _changePage(_currentPage - 1)
+                              : null,
                           color: _currentPage > 1 ? Colors.black : Colors.grey,
                         ),
-                        for (int i = 1; i <= (filteredAbsences.length / _rowsPerPage).ceil(); i++)
+                        for (int i = 1;
+                            i <=
+                                (filteredAbsences.length / _rowsPerPage).ceil();
+                            i++)
                           Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 4.0),
                             child: ElevatedButton(
                               onPressed: () => _changePage(i),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: _currentPage == i ? Colors.green : Colors.white,
-                                foregroundColor: _currentPage == i ? Colors.white : Colors.black,
+                                backgroundColor: _currentPage == i
+                                    ? Colors.green
+                                    : Colors.white,
+                                foregroundColor: _currentPage == i
+                                    ? Colors.white
+                                    : Colors.black,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(4),
                                 ),
@@ -304,10 +382,16 @@ class _AbsencesHistoryPageState extends State<AbsencesHistoryPage> {
                           ),
                         IconButton(
                           icon: const Icon(Icons.arrow_forward_ios, size: 12),
-                          onPressed: _currentPage < (filteredAbsences.length / _rowsPerPage).ceil()
+                          onPressed: _currentPage <
+                                  (filteredAbsences.length / _rowsPerPage)
+                                      .ceil()
                               ? () => _changePage(_currentPage + 1)
                               : null,
-                          color: _currentPage < (filteredAbsences.length / _rowsPerPage).ceil() ? Colors.black : Colors.grey,
+                          color: _currentPage <
+                                  (filteredAbsences.length / _rowsPerPage)
+                                      .ceil()
+                              ? Colors.black
+                              : Colors.grey,
                         ),
                       ],
                     ),

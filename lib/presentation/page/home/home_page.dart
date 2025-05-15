@@ -133,7 +133,7 @@ class _HomePageState extends State<HomePage> {
                             snapshot.data!.isEmpty) {
                           print(
                               'Avatar loading failed, data empty, or error: ${snapshot.error}');
-                          return  Image.asset('assets/default_avatar.png');
+                          return  Image.asset('assets/avata.png');
                         }
                         try {
                           print(
@@ -386,7 +386,7 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
               Text(
-                "40:00:05",
+                "00:00:00",
                 style: GoogleFonts.baloo2(
                   textStyle: const TextStyle(
                     fontSize: 50,
