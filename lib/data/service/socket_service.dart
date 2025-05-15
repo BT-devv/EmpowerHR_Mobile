@@ -17,13 +17,13 @@ class NotificationService {
   Stream<List<NotificationModel>> get notificationStream =>
       _notificationController.stream;
 
-  Timer? _pingTimer; // Timer để gửi ping
-  String? _currentEmployeeID; // Lưu employeeID để reconnect
-  bool _isLoggedOut = false; // Trạng thái logout
+  Timer? _pingTimer; 
+  String? _currentEmployeeID; 
+  bool _isLoggedOut = false; 
 
   Future<void> init(String employeeID) async {
     _currentEmployeeID = employeeID;
-    _isLoggedOut = false; // Reset trạng thái logout
+    _isLoggedOut = false; 
     await _loadNotifications();
     _connectSocket(employeeID);
   }
@@ -50,7 +50,7 @@ class NotificationService {
   }
 
   void _connectSocket(String employeeID) {
-    const wsUrl = 'ws://192.168.100.68:3000'; // Thay đổi theo server thực tế
+    const wsUrl = 'ws://192.168.100.68:3000'; 
     try {
       print('Attempting to connect to WebSocket at: $wsUrl');
       _channel = WebSocketChannel.connect(Uri.parse(wsUrl));
@@ -59,7 +59,6 @@ class NotificationService {
       print(
           'Sent register message: {"type": "register", "employeeID": "$employeeID"}');
 
-      // Bắt đầu gửi ping định kỳ
       _startPing();
 
       _channel!.stream.listen(
@@ -92,13 +91,13 @@ class NotificationService {
         onError: (error) {
           print('WebSocket Error: $error');
           if (!_isLoggedOut) {
-            _reconnect(employeeID); // Reconnect nếu chưa logout
+            _reconnect(employeeID); 
           }
         },
         onDone: () {
           print('WebSocket closed');
           if (!_isLoggedOut) {
-            _reconnect(employeeID); // Reconnect nếu chưa logout
+            _reconnect(employeeID); 
           }
         },
         cancelOnError: false,
@@ -106,19 +105,19 @@ class NotificationService {
     } catch (e) {
       print('Failed to connect to WebSocket: $e');
       if (!_isLoggedOut) {
-        _reconnect(employeeID); // Reconnect nếu chưa logout
+        _reconnect(employeeID); 
       }
     }
   }
 
   void _startPing() {
-    _pingTimer?.cancel(); // Hủy timer cũ nếu có
+    _pingTimer?.cancel(); 
     _pingTimer = Timer.periodic(Duration(seconds: 30), (timer) {
       if (_channel != null && _channel!.sink != null && !_isLoggedOut) {
         _channel!.sink.add(jsonEncode({'type': 'ping'}));
         print('Sent ping to keep WebSocket alive');
       } else {
-        timer.cancel(); // Dừng ping nếu không có kết nối hoặc đã logout
+        timer.cancel(); 
         print('Stopped ping: WebSocket channel is null or user logged out');
       }
     });
@@ -130,12 +129,12 @@ class NotificationService {
       return;
     }
     if (_channel != null) {
-      _channel!.sink.close(); // Đóng kết nối cũ
+      _channel!.sink.close(); 
     }
     Future.delayed(const Duration(seconds: 5), () {
       print('Attempting to reconnect for employeeID: $employeeID...');
-      _channel = null; // Reset channel
-      _connectSocket(employeeID); // Thử kết nối lại
+      _channel = null; 
+      _connectSocket(employeeID); 
     });
   }
 
@@ -152,7 +151,7 @@ class NotificationService {
     } else {
       print('Cannot send notification: WebSocket channel is null or closed');
       if (_currentEmployeeID != null && !_isLoggedOut) {
-        _reconnect(_currentEmployeeID!); // Thử kết nối lại nếu channel null
+        _reconnect(_currentEmployeeID!); 
       }
     }
   }
@@ -216,15 +215,15 @@ class NotificationService {
     _notifications.clear();
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('notifications');
-    _notificationController.add(_notifications); // Phát stream rỗng
+    _notificationController.add(_notifications); 
     print('All notifications cleared');
   }
 
   void disconnectOnLogout() {
-    _isLoggedOut = true; // Đánh dấu đã logout
-    _pingTimer?.cancel(); // Dừng ping
-    _channel?.sink.close(); // Đóng kết nối WebSocket
-    _notificationController.close(); // Đóng stream
+    _isLoggedOut = true; 
+    _pingTimer?.cancel(); 
+    _channel?.sink.close(); 
+    _notificationController.close(); 
     print('Disconnected WebSocket and closed stream on logout');
   }
 }
