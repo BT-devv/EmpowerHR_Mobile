@@ -252,22 +252,7 @@ class _HomePageState extends State<HomePage> {
               overflow: TextOverflow.ellipsis,
             ),
           ),
-          Container(
-            height: screenWidth * 0.10,
-            width: screenWidth * 0.10,
-            decoration: BoxDecoration(
-              color: const Color(0xFF80C0A5).withOpacity(0.4),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: IconButton(
-              iconSize: 20,
-              onPressed: () {},
-              icon: const Icon(
-                Icons.calendar_month,
-                color: Color(0xFF80C0A5),
-              ),
-            ),
-          ),
+          
         ],
       ),
     );

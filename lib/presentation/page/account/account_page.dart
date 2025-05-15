@@ -5,17 +5,12 @@ import 'package:empowerhr_moblie/data/service/socket_service.dart';
 import 'package:empowerhr_moblie/presentation/bloc/user_info/user_bloc.dart';
 import 'package:empowerhr_moblie/presentation/bloc/user_info/user_event.dart';
 import 'package:empowerhr_moblie/presentation/bloc/user_info/user_state.dart';
-import 'package:empowerhr_moblie/presentation/page/account/Change_password_page.dart';
-import 'package:empowerhr_moblie/presentation/page/account/change_theme_Page.dart';
 import 'package:empowerhr_moblie/presentation/page/account/employee_rights.dart';
-import 'package:empowerhr_moblie/presentation/page/account/manage_account_status_page.dart';
-import 'package:empowerhr_moblie/presentation/page/account/manage_notification_page.dart';
 import 'package:empowerhr_moblie/presentation/page/account/personal_information_page.dart';
-import 'package:empowerhr_moblie/presentation/page/account/privacy_policy_page.dart';
-import 'package:empowerhr_moblie/presentation/page/account/terms_and_condition_page.dart';
 import 'package:empowerhr_moblie/presentation/page/auth/forgot_password_page.dart';
 import 'package:empowerhr_moblie/presentation/page/auth/login_page.dart';
 import 'package:empowerhr_moblie/presentation/page/coming_soon.dart';
+import 'package:empowerhr_moblie/presentation/page/home/notification_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -33,11 +28,11 @@ class _AccountPageState extends State<AccountPage> {
   final Map<String, Widget> _pageMapping = {
     "Personal Information": PersonalInformationPage(),
     "Change Password": ForgotPassword_page(),
-    "Manage Account Status": const ManageAccountStatusPage(),
-    "Manage Notification": const ManageNotificationPage(),
-    "Change theme": const ChangeThemePage(),
-    "Terms & Condition": const TermsAndConditionPage(),
-    "Privacy Policy": const PrivacyPolicyPage(),
+    "Manage Account Status": const UnderDevelopmentPage(),
+    "Manage Notification": const NotificationPage(),
+    "Change theme": const UnderDevelopmentPage(),
+    "Terms & Condition": const UnderDevelopmentPage(),
+    "Privacy Policy": const UnderDevelopmentPage(),
     "Employee's rights": const EmployeeRightsPage(),
   };
 
@@ -216,12 +211,11 @@ class _AccountPageState extends State<AccountPage> {
                                       height: 20,
                                       width: 20,
                                     ),
-                                    comingSoon: true,
                                     onTap: () => Navigator.push(
                                       context,
                                       MaterialPageRoute(
                                         builder: (context) =>
-                                            UnderDevelopmentPage(),
+                                            NotificationPage(),
                                       ),
                                     ),
                                   ),
